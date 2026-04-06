@@ -49,6 +49,15 @@ function App() {
     return 'student'
   })
 
+  const [schoolIdentity, setSchoolIdentity] = useState(() => {
+    const saved = localStorage.getItem('epus_school_identity')
+    return saved ? JSON.parse(saved) : {
+      name: 'SMP NEGERI 2 AMURANG TIMUR (SATAP)',
+      department: 'Kementerian Pendidikan Dasar',
+      logo: 'https://upload.wikimedia.org/wikipedia/commons/9/9d/Logo_Tut_Wuri_Handayani.png'
+    }
+  })
+
   // ── FULLSCREEN on Mount & Interaction ──────────────────
   useEffect(() => {
     // Coba masuk fullscreen saat pertama kali
@@ -107,15 +116,6 @@ function App() {
 
   const [readingBook, setReadingBook] = useState(null)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
-  const [schoolIdentity, setSchoolIdentity] = useState(() => {
-    const saved = localStorage.getItem('epus_school_identity')
-    return saved ? JSON.parse(saved) : {
-      name: 'SMP NEGERI 2 AMURANG TIMUR (SATAP)',
-      department: 'Kementerian Pendidikan Dasar',
-      logo: 'https://upload.wikimedia.org/wikipedia/commons/9/9d/Logo_Tut_Wuri_Handayani.png'
-    }
-  })
-
   useEffect(() => {
     localStorage.setItem('epus_school_identity', JSON.stringify(schoolIdentity))
   }, [schoolIdentity])

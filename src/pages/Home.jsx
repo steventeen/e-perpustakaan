@@ -13,6 +13,14 @@ const Home = ({ books, categories, activeCategory, setActiveCategory, onOpenRead
     
   const FEATURED_BOOKS = filteredBooks.slice(0, 8)
 
+  const ACADEMIC_BOOKS = books.filter(b => 
+    b.category?.toLowerCase().includes('smp') || 
+    b.category?.toLowerCase().includes('sd') ||
+    b.category?.toLowerCase().includes('sma') ||
+    b.category?.toLowerCase().includes('pendidikan') ||
+    b.category?.match(/textbook|sekolah/i)
+  ).slice(0, 8)
+
   const getCategoryCount = (catName) => {
     if (catName === 'Semua') return books.length
     return books.filter(book => book.category === catName).length
@@ -138,6 +146,65 @@ const Home = ({ books, categories, activeCategory, setActiveCategory, onOpenRead
           )}
         </div>
       </section>
+
+      {/* ── KOLEKSI PELAJARAN ── */}
+      {ACADEMIC_BOOKS.length > 0 && activeCategory === 'Semua' && (
+        <section className="px-6">
+          <div className="flex justify-between items-end mb-6">
+            <div>
+              <h2 className="text-2xl font-black text-slate-800 tracking-tight">Koleksi Pelajaran</h2>
+              <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">Buku referensi akademik</p>
+            </div>
+            <button
+              onClick={() => {
+                const eduCat = categories.find(c => c.name.toLowerCase().includes('smp'));
+                if (eduCat) setActiveCategory(eduCat.name);
+                else onSeeAll();
+              }}
+              className="flex items-center space-x-1 text-xs font-black text-primary-600 uppercase tracking-widest hover:bg-primary-50 px-4 py-2 rounded-xl transition-all active:scale-95"
+            >
+              <span>Lihat Semua</span>
+              <ChevronRight size={14} />
+            </button>
+          </div>
+
+          <div className="flex space-x-6 overflow-x-auto hide-scrollbar py-4 md:grid md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 md:gap-8 md:space-x-0 md:overflow-visible">
+            {ACADEMIC_BOOKS.map(book => (
+              <motion.div
+                key={book.id}
+                whileHover={{ y: -10 }}
+                className="min-w-[160px] flex flex-col group cursor-pointer md:min-w-0"
+                onClick={() => onOpenReader(book)}
+              >
+                <div className="relative mb-4 group">
+                  <img
+                    src={book.cover_url || getBookCover(book.title, book.isbn)}
+                    alt={book.title}
+                    className="rounded-[2rem] shadow-[0_16px_40px_rgba(30,41,59,0.1)] w-full h-[220px] object-cover group-hover:shadow-[0_24px_50px_rgba(30,41,59,0.18)] transition-all duration-500 bg-slate-100"
+                  />
+                  {/* Hover Overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/30 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-400 rounded-[2rem] flex flex-col justify-end p-4">
+                    <button className="w-full py-3 bg-primary-600 text-white rounded-xl text-[10px] font-black uppercase tracking-[0.2em] shadow-xl active:scale-95 transition-all">
+                      📖 Baca
+                    </button>
+                  </div>
+                  {/* Bookmark badge */}
+                  <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-all delay-75 translate-y-1 group-hover:translate-y-0">
+                    <div className="glass p-2 rounded-xl text-primary-600 shadow-xl border-white/20">
+                      <Bookmark size={16} fill="currentColor" />
+                    </div>
+                  </div>
+                </div>
+                <div className="px-1">
+                  <p className="text-primary-600 font-black text-[9px] uppercase tracking-[0.2em] mb-1">{book.category}</p>
+                  <h4 className="font-black text-sm text-slate-800 line-clamp-2 leading-tight tracking-tight">{book.title}</h4>
+                  <p className="text-xs text-slate-400 font-bold mt-1">{book.author}</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* ── REWARD CARD ── */}
       <section className="px-6 pb-4">

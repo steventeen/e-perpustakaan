@@ -431,7 +431,7 @@ const ModalAnggota = ({ onClose }) => {
 
         {/* Filter tabs */}
         <div className="flex gap-2 mb-4 overflow-x-auto hide-scrollbar">
-          {[['all','Semua'],['student','Siswa'],['teacher','Guru'],['7','Kls 7'],['8','Kls 8'],['9','Kls 9']].map(([v,l]) => (
+          {[['all','Semua'],['student','Siswa'],['teacher','Guru'],['masyarakat','Umum'],['7','Kls 7'],['8','Kls 8'],['9','Kls 9']].map(([v,l]) => (
             <button key={v} onClick={() => setFilterG(v)}
               className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase whitespace-nowrap transition-all ${filterG===v ? 'bg-primary-600 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}>
               {l}
@@ -471,6 +471,7 @@ const ModalAnggota = ({ onClose }) => {
                           <option value="student">Siswa</option>
                           <option value="teacher">Guru</option>
                           <option value="librarian">Pustakawan</option>
+                          <option value="masyarakat">Umum</option>
                         </select>
                       </div>
                       <div>

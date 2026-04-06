@@ -421,6 +421,26 @@ const ModalAnggota = ({ onClose }) => {
   }
   const cancelEdit = () => setEditingId(null)
 
+  const handleDeleteUser = async (u) => {
+    if (!window.confirm(`Hapus anggota "${u.full_name || u.username}"?`)) return
+    
+    // 1. Hapus dari state lokal
+    setUsers(prev => prev.filter(user => user.username !== u.username))
+    
+    // 2. Hapus dari Database Supabase
+    try {
+      await supabase.from('profiles').delete().eq('username', u.username)
+      await supabase.from('user_requests').delete().eq('username', u.username)
+    } catch(e) {}
+    
+    // 3. Simpan state sisa ke localStorage
+    const saved = JSON.parse(localStorage.getItem('epus_users') || '[]')
+    const updatedLocal = saved.filter(usr => usr.username !== u.username)
+    localStorage.setItem('epus_users', JSON.stringify(updatedLocal))
+    
+    alert(`🗑️ Anggota "${u.full_name || u.username}" telah dihapus.`)
+  }
+
   const ROLE_COLORS = {
     student:    'bg-emerald-100 text-emerald-700',
     teacher:    'bg-amber-100 text-amber-700',
@@ -541,9 +561,15 @@ const ModalAnggota = ({ onClose }) => {
                     </div>
                     <button
                       onClick={() => startEdit(u)}
-                      className="opacity-0 group-hover:opacity-100 p-2 text-slate-400 hover:text-primary-600 transition-all ml-2 shrink-0"
+                      className="opacity-0 group-hover:opacity-100 p-2 text-slate-400 hover:text-blue-500 transition-all ml-1 shrink-0"
                       title="Edit">
                       <Edit2 size={16} />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteUser(u)}
+                      className="opacity-0 group-hover:opacity-100 p-2 text-slate-400 hover:text-red-500 transition-all shrink-0"
+                      title="Hapus">
+                      <Trash2 size={16} />
                     </button>
                   </div>
                 )}
@@ -660,12 +686,12 @@ const LibrarianPanel = ({ categories = [], schoolIdentity, setSchoolIdentity, bo
 
   useEffect(() => {
     const fetchTotal = async () => {
-      const { data } = await supabase.from('profiles').select('id')
-      if (data) {
-        // Gabungkan hardcoded + data baru (filter duplikat jika perlu, tapi simpelnya tambah saja)
-        const dbCount = data.length
-        setTotalUsers(USERS_DATA.length + dbCount)
-      }
+      const { data: profiles } = await supabase.from('profiles').select('id')
+      const { data: requests } = await supabase.from('user_requests').select('id').eq('status', 'approved')
+      
+      const dbU = profiles ? profiles.length : 0
+      const dbR = requests ? requests.length : 0
+      setTotalUsers(USERS_DATA.length + dbU + dbR)
     }
     fetchTotal()
   }, [])

@@ -34,15 +34,31 @@ const RegisterForm = ({ onBack, schoolIdentity }) => {
 
     setLoading(true)
 
-    // Cek duplikat username
     const savedUsers = JSON.parse(localStorage.getItem('epus_users') || '[]')
     const pendingUsers = JSON.parse(localStorage.getItem('epus_pending_users') || '[]')
     const allAccounts = [...DEMO_ACCOUNTS, ...savedUsers, ...pendingUsers]
+    
+    // ── 1. CEK LOKAL ──
     if (allAccounts.find(a => a.username.toLowerCase() === form.username.trim().toLowerCase())) {
-      setError('Username sudah digunakan. Pilih username lain.')
+      setError('Username sudah digunakan secara lokal. Pilih username lain.')
       setLoading(false)
       return
     }
+
+    // ── 2. CEK DATABASE SUPABASE (SINKRONISASI CLOUD) ──
+    try {
+      const { data: dbCheck } = await supabase
+        .from('user_requests')
+        .select('username')
+        .eq('username', form.username.trim())
+        .maybeSingle();
+
+      if (dbCheck) {
+        setError('Username sudah terdaftar di sistem pusat. Silakan gunakan username lain.')
+        setLoading(false)
+        return
+      }
+    } catch (e) {}
 
     const request = {
       id:          Date.now(),
@@ -198,7 +214,46 @@ const Login = ({ onLogin, schoolIdentity }) => {
     setLoading(true)
     await new Promise(r => setTimeout(r, 700))
 
-    // Cek dulu apakah ada di pending (belum disetujui)
+    // ── 1. CEK KE DATABASE SUPABASE (SINKRONISASI CLOUD) ──
+    try {
+      const { data: dbRequest, error: dbErr } = await supabase
+        .from('user_requests')
+        .select('*')
+        .eq('username', username.trim())
+        .single();
+      
+      if (dbRequest && !dbErr) {
+        if (dbRequest.status === 'pending') {
+          setError('Akun Anda sedang menunggu persetujuan Pustakawan. Cek email Anda setelah disetujui.');
+          setLoading(false);
+          return;
+        }
+        if (dbRequest.status === 'rejected') {
+          setError('Maaf, pendaftaran akun Anda ditolak oleh Pustakawan.');
+          setLoading(false);
+          return;
+        }
+        // Jika status approved, kita lanjut proses login di bawah
+        // Gunakan password dari DB jika it's a registered user
+        if (dbRequest.status === 'approved' && dbRequest.password_hash === password) {
+          // Login Berhasil (dari DB)
+          const sUser = {
+            id: dbRequest.id,
+            username: dbRequest.username,
+            role: dbRequest.role || 'masyarakat',
+            display: dbRequest.full_name || dbRequest.username,
+            full_name: dbRequest.full_name,
+            email: dbRequest.email
+          };
+          await logActivity(sUser.id, sUser.username, 'system', 'Pendaftar berhasil masuk (Database Approved)');
+          onLogin(sUser);
+          setLoading(false);
+          return;
+        }
+      }
+    } catch (e) { console.warn('Sync DB Check Failed:', e) }
+
+    // ── 2. CEK LOCAL FALLBACK & DEMO ACCOUNTS ──
     const pendingUsers = JSON.parse(localStorage.getItem('epus_pending_users') || '[]')
     const isPending = pendingUsers.find(u =>
       u.username.toLowerCase() === username.trim().toLowerCase() && 

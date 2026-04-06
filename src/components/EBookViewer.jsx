@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { X, ExternalLink, Maximize2, Minimize2, RotateCcw, AlertTriangle, BookOpen } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { logActivity } from '../utils/logger'

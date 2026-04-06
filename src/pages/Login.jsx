@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { BookOpen, Eye, EyeOff, User, Lock, ChevronRight, Mail, Phone, Users, Clock } from 'lucide-react'
+import { BookOpen, Eye, EyeOff, User, Lock, ChevronRight, Mail, Phone, Users, Clock, ChevronLeft } from 'lucide-react'
 import { USERS_DATA } from '../dataStore'
 import { supabase } from '../lib/supabase'
 import { logActivity } from '../utils/logger'

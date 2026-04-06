@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Plus, Table, Users, BarChart3, Trash2, Search, BookOpen, X, Camera, ScanLine, Edit2, Save, Shield, Settings, RefreshCcw } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Html5QrcodeScanner } from 'html5-qrcode'
@@ -638,7 +638,19 @@ const LibrarianPanel = ({ categories = [], schoolIdentity, setSchoolIdentity, bo
     return matchCat && matchSearch
   })
 
-  const CATS = ['Semua', 'IPA', 'Matematika', 'Bahasa Indonesia', 'IPS', 'PPKn', 'Informatika', 'Prakarya']
+  const [totalUsers, setTotalUsers] = useState(USERS_DATA.length)
+
+  useEffect(() => {
+    const fetchTotal = async () => {
+      const { data } = await supabase.from('profiles').select('id')
+      if (data) {
+        // Gabungkan hardcoded + data baru (filter duplikat jika perlu, tapi simpelnya tambah saja)
+        const dbCount = data.length
+        setTotalUsers(USERS_DATA.length + dbCount)
+      }
+    }
+    fetchTotal()
+  }, [])
 
   return (
     <div className="min-h-screen bg-slate-50 p-6 pt-12 pb-32">
@@ -676,7 +688,7 @@ const LibrarianPanel = ({ categories = [], schoolIdentity, setSchoolIdentity, bo
             <Users className="text-emerald-600 group-hover:text-white" size={20} />
           </div>
           <p className="text-xs font-black text-slate-400 group-hover:text-emerald-100 uppercase tracking-wider">Kelola</p>
-          <p className="text-sm font-black text-slate-800 group-hover:text-white">Anggota ({USERS_DATA.length})</p>
+          <p className="text-sm font-black text-slate-800 group-hover:text-white">Anggota ({totalUsers})</p>
         </button>
         <button onClick={() => setShowModalKategori(true)}
           className="bg-white p-5 rounded-3xl shadow-sm text-left group hover:bg-amber-600 transition-all active:scale-95 border border-slate-100">

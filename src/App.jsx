@@ -34,24 +34,38 @@ const enterFullscreen = () => {
 
 
 function App() {
+  // ── Debug Logger ─────────────────────────────────────
+  useEffect(() => { console.log("🚀 App Root Mounted. User:", user); }, []);
+
   // ── Auth State ──────────────────────────────────────────
   const [user, setUser] = useState(() => {
-    const saved = localStorage.getItem('epus_session_user')
-    return saved ? JSON.parse(saved) : null
+    try {
+      const saved = localStorage.getItem('epus_session_user')
+      if (saved && saved !== 'undefined') return JSON.parse(saved)
+    } catch (e) { 
+      console.error('Session Parse Error:', e)
+      localStorage.removeItem('epus_session_user')
+    }
+    return null
   })
 
   // ── App State ───────────────────────────────────────────
   const [activeTab, setActiveTab] = useState('home')
   const [category, setCategory] = useState('Semua')
   const [role, setRole] = useState(() => {
-    const saved = localStorage.getItem('epus_session_user')
-    if (saved) return JSON.parse(saved).role
+    try {
+      const saved = localStorage.getItem('epus_session_user')
+      if (saved && saved !== 'undefined') return JSON.parse(saved).role
+    } catch (e) {}
     return 'student'
   })
 
   const [schoolIdentity, setSchoolIdentity] = useState(() => {
-    const saved = localStorage.getItem('epus_school_identity')
-    return saved ? JSON.parse(saved) : {
+    try {
+      const saved = localStorage.getItem('epus_school_identity')
+      if (saved && saved !== 'undefined') return JSON.parse(saved)
+    } catch (e) {}
+    return {
       name: 'SMP NEGERI 2 AMURANG TIMUR (SATAP)',
       department: 'Kementerian Pendidikan Dasar',
       logo: 'https://upload.wikimedia.org/wikipedia/commons/9/9d/Logo_Tut_Wuri_Handayani.png'

@@ -53,11 +53,9 @@ const categoryMap = {
   'lainnya': 'Lainnya'
 };
 
-// PERBAIKAN PATH: Pastikan path benar
 const sitemapPath = 'C:\\Users\\KOMINFO26\\.gemini\\antigravity\\brain\\72d3e8fb-bb30-4b39-af42-18dd502663af\\.system_generated\\steps\\830\\content.md';
 const content = fs.readFileSync(sitemapPath, 'utf8');
 
-// Regex untuk mengambil URL buku
 const urlRegex = /<loc>https:\/\/www\.perpus\.org\/([^/]+)\/([^<]+)<\/loc>/g;
 let match;
 const books = [];
@@ -72,18 +70,21 @@ while ((match = urlRegex.exec(content)) !== null) {
     const category = categoryMap[catSlug];
     categoriesFound.add(category);
     
+    // POLA GAMBAR DITEMUKAN: https://image-v2.free-ebook.my.id/sketch/[SLUG]/[SLUG]-min.jpg
+    const cover_url = `https://image-v2.free-ebook.my.id/sketch/${bookSlug}/${bookSlug}-min.jpg`;
+    
     books.push({
       title,
       author: 'Penulis Perpus.org',
       category,
       description: `Koleksi buku digital kategori ${category} dari perpus.org.`,
       requires_approval: false,
-      file_url: `https://www.perpus.org/${catSlug}/${bookSlug}` 
+      file_url: `https://www.perpus.org/${catSlug}/${bookSlug}`,
+      cover_url
     });
   }
 }
 
-// Tambahkan beberapa kategori manual yang diminta user jika tidak ada di slug
 const manualCategories = [
   'Ensiklopedia', 'Textbook', 'SD', 'SMP', 'SMA', 
   'Kepemimpinan & Manajemen Tim', 'Pria Seratus Persen', 
@@ -93,7 +94,7 @@ manualCategories.forEach(c => categoriesFound.add(c));
 
 console.log(`Berhasil mengekstrak ${books.length} buku unik.`);
 
-let sql = "-- SQL SEED RAKSASA (2.000+ BOOKS)\n";
+let sql = "-- SQL SEED RAKSASA DENGAN SAMPUL (2.000+ BOOKS)\n";
 sql += "-- Generated based on perpus.org sitemap\n\n";
 
 sql += "-- 1. DAFTARKAN KATEGORI\n";
@@ -102,17 +103,16 @@ Array.from(categoriesFound).forEach(cat => {
 });
 
 sql += "\n-- 2. INSERT BUKU (BATCHED)\n";
-// Ambil maksimal sesuai permintaan user (2000-an)
 const finalBooks = books.slice(0, 2000);
 
 finalBooks.forEach((b, index) => {
-  sql += `INSERT INTO books (title, author, category_id, description, requires_approval, file_url) \n`;
-  sql += `SELECT '${b.title.replace(/'/g, "''")}', '${b.author.replace(/'/g, "''")}', id, '${b.description.replace(/'/g, "''")}', false, '${b.file_url}' \n`;
+  sql += `INSERT INTO books (title, author, category_id, description, requires_approval, file_url, cover_url) \n`;
+  sql += `SELECT '${b.title.replace(/'/g, "''")}', '${b.author.replace(/'/g, "''")}', id, '${b.description.replace(/'/g, "''")}', false, '${b.file_url}', '${b.cover_url}' \n`;
   sql += `FROM categories WHERE name = '${b.category}' LIMIT 1;\n\n`;
   
   if (index % 500 === 0) console.log(`Memproses buku ke-${index}...`);
 });
 
 fs.writeFileSync('seed_perpus_2000.sql', sql, 'utf8');
-console.log("\nSUKSES! Berkas seed_perpus_2000.sql telah dibuat.");
+console.log("\nSUKSES! Berkas seed_perpus_2000.sql (dengan cover) telah dibuat.");
 console.log(`Total yang dimasukkan: ${finalBooks.length} buku.`);

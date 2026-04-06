@@ -785,8 +785,11 @@ const LibrarianPanel = ({ categories = [], schoolIdentity, setSchoolIdentity, bo
             <div className="flex gap-2 overflow-x-auto hide-scrollbar">
               {['Semua', ...categories.map(c => c.name)].map(c => (
                 <button key={c} onClick={() => setFilterCat(c)}
-                  className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${filterCat===c ? 'bg-primary-600 text-white shadow' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}>
-                  {c}
+                  className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all flex items-center gap-2 ${filterCat===c ? 'bg-primary-600 text-white shadow' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}>
+                  <span>{c}</span>
+                  <span className={`px-1.5 py-0.5 rounded-lg text-[9px] ${filterCat===c ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-400'}`}>
+                    {c === 'Semua' ? (books?.length || 0) : (books || []).filter(b => b.category === c).length}
+                  </span>
                 </button>
               ))}
             </div>
@@ -812,7 +815,7 @@ const LibrarianPanel = ({ categories = [], schoolIdentity, setSchoolIdentity, bo
             <motion.div key={book.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.025 }}
               className="bg-white p-4 rounded-3xl flex items-center justify-between shadow-sm border border-slate-100 group">
               <div className="flex items-center space-x-4 flex-1 min-w-0">
-                <img src={getBookCover(book.title, book.isbn)} alt={book.title}
+                <img src={book.cover_url || getBookCover(book.title, book.isbn)} alt={book.title}
                   className="w-12 h-16 rounded-xl object-cover bg-slate-100 shrink-0" />
                 <div className="min-w-0">
                   <h4 className="font-black text-slate-800 text-sm line-clamp-1">{book.title}</h4>

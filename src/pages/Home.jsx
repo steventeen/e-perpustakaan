@@ -13,6 +13,11 @@ const Home = ({ books, categories, activeCategory, setActiveCategory, onOpenRead
     
   const FEATURED_BOOKS = filteredBooks.slice(0, 8)
 
+  const getCategoryCount = (catName) => {
+    if (catName === 'Semua') return books.length
+    return books.filter(book => book.category === catName).length
+  }
+
   return (
     <div className="pb-24 space-y-10 font-['Outfit']">
 
@@ -57,13 +62,18 @@ const Home = ({ books, categories, activeCategory, setActiveCategory, onOpenRead
             <button
               key={cat}
               onClick={() => setActiveCategory(cat)}
-              className={`px-6 py-3 rounded-2xl whitespace-nowrap text-sm font-black transition-all duration-300 ${
+              className={`px-6 py-3 rounded-2xl whitespace-nowrap text-sm font-black transition-all duration-300 flex items-center shadow-sm ${
                 activeCategory === cat
                   ? 'bg-primary-600 text-white shadow-xl shadow-primary-200 scale-105'
                   : 'bg-white text-slate-500 hover:bg-slate-50 border border-slate-100'
               }`}
             >
-              {cat}
+              <span>{cat}</span>
+              <span className={`ml-2 px-2 py-0.5 rounded-lg text-[10px] ${
+                activeCategory === cat ? 'bg-white/20 text-white shadow-inner' : 'bg-slate-100 text-slate-400 font-bold'
+              }`}>
+                {getCategoryCount(cat)}
+              </span>
             </button>
           ))}
         </div>

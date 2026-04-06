@@ -12,6 +12,13 @@ const Catalog = ({ books = [], categories = [], onOpenReader, autoFocus }) => {
   const [typeFilter, setTypeFilter] = useState('all')
   const searchRef = useRef(null)
 
+  // Hitung jumlah buku per kategori
+  const getCategoryCount = (catName) => {
+    const currentBooks = books.length > 0 ? books : BOOKS_DATA
+    if (catName === 'Semua') return currentBooks.length
+    return currentBooks.filter(b => b.category === catName).length
+  }
+
   // Auto focus jika dibuka dari tab Cari
   useEffect(() => {
     if (autoFocus && searchRef.current) {
@@ -84,13 +91,18 @@ const Catalog = ({ books = [], categories = [], onOpenReader, autoFocus }) => {
             <button
               key={cat}
               onClick={() => setActiveCategory(cat)}
-              className={`px-4 py-2 rounded-xl whitespace-nowrap text-[10px] font-black uppercase tracking-widest transition-all shrink-0 ${
+              className={`px-4 py-2 rounded-xl whitespace-nowrap text-[10px] font-black uppercase tracking-widest transition-all shrink-0 flex items-center ${
                 activeCategory === cat
-                  ? 'bg-primary-600 text-white shadow-lg'
+                  ? 'bg-primary-600 text-white shadow-lg shadow-primary-100'
                   : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
               }`}
             >
-              {cat}
+              <span>{cat}</span>
+              <span className={`ml-2 px-1.5 py-0.5 rounded-lg text-[9px] ${
+                activeCategory === cat ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-400'
+              }`}>
+                {getCategoryCount(cat)}
+              </span>
             </button>
           ))}
         </div>

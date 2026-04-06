@@ -503,10 +503,10 @@ const ModalAnggota = ({ onClose }) => {
                   <div className="flex items-center px-3 py-3 bg-slate-50 hover:bg-slate-100 rounded-2xl transition-colors group">
                     <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white text-xs font-black mr-3 shrink-0"
                       style={{ background: AVATAR_COLORS[u.role] || '#6366f1' }}>
-                      {u.full_name?.split(' ').map(w=>w[0]).slice(0,2).join('')}
+                      {(u.full_name || u.username || 'U').split(' ').map(w=>w[0]).slice(0,2).join('')}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-black text-slate-800 truncate">{u.full_name}</p>
+                      <p className="text-sm font-black text-slate-800 truncate">{u.full_name || u.username}</p>
                       <div className="flex items-center gap-2 mt-0.5">
                         <span className={`text-[9px] font-black px-2 py-0.5 rounded-lg uppercase ${ROLE_COLORS[u.role]}`}>
                           {u.role === 'teacher' ? 'Guru' : u.role === 'librarian' ? 'Pustakawan' : `Kls ${u.grade}`}

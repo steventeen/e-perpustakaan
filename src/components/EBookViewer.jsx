@@ -61,11 +61,14 @@ const EBookViewer = ({ book, onClose, user }) => {
   const getReaderUrl = (url, mode) => {
     if (!url) return "https://buku.kemdikbud.go.id/katalog"
     
+    // Khusus perpus.org: deteksi jika embed kemungkinan diblokir
+    const isPerpusOrg = url.includes('perpus.org')
+    if (isPerpusOrg) return null // Sinyalkan untuk memakai fallback UI
+
     if (mode === 'direct') return url;
 
     // Jika link adalah PDF langsung dari repositori luar, gunakan Google Viewer Proxy
     if (url.toLowerCase().endsWith('.pdf') || url.includes('/pdf/')) {
-      // Fix potential double-encoding for filenames with spaces (like %20)
       const decoded = decodeURI(url);
       return `https://docs.google.com/viewer?url=${encodeURIComponent(decoded)}&embedded=true`
     }
@@ -150,18 +153,52 @@ const EBookViewer = ({ book, onClose, user }) => {
          </AnimatePresence>
 
          {/* Iframe Content */}
-         <iframe 
-           key={viewMode}
-           src={readerUrl} 
-           className="w-full h-full border-none bg-slate-50"
-           onLoad={() => {
-              setTimeout(() => setIsLoading(false), 1200)
-           }}
-           onError={() => setHasError(true)}
-           title={book.title}
-           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-           allowFullScreen
-         />
+         {readerUrl ? (
+           <iframe 
+             key={viewMode}
+             src={readerUrl} 
+             className="w-full h-full border-none bg-slate-50"
+             onLoad={() => {
+                setTimeout(() => setIsLoading(false), 1200)
+             }}
+             onError={() => setHasError(true)}
+             title={book.title}
+             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+             allowFullScreen
+           />
+         ) : (
+           /* FALLBACK KHUSUS UNTUK PERPUS.ORG / EXTERNAL YANG DIBLOKIR */
+           <div className="absolute inset-0 bg-slate-50 flex flex-col items-center justify-center p-8 text-center z-20">
+             <div className="w-24 h-24 bg-primary-100 text-primary-600 rounded-[2.5rem] flex items-center justify-center mb-8 shadow-xl shadow-primary-100/20">
+                <ExternalLink size={40} />
+             </div>
+             <h4 className="text-2xl font-black text-slate-800 mb-2 tracking-tight">Koleksi Eksternal Perpus.org</h4>
+             <p className="text-slate-400 text-sm max-w-sm mb-10 font-bold leading-relaxed">
+               Buku ini adalah koleksi dari perpus.org. Karena kebijakan keamanan, buku ini hanya dapat dibaca melalui jendela baru yang lebih optimal.
+             </p>
+             
+             <a 
+               href={originalUrl} 
+               target="_blank" 
+               rel="noopener noreferrer"
+               className="px-10 py-5 bg-primary-600 text-white rounded-[2rem] font-black uppercase tracking-widest shadow-2xl shadow-primary-100 hover:scale-105 active:scale-95 transition-all flex items-center justify-center space-x-3"
+               onClick={() => {
+                  logActivity(user.id, user.username, 'external_read', `Membuka link luar: ${book.title}`);
+                  onClose();
+               }}
+             >
+                 <BookOpen size={20} />
+                 <span>Buka Jendela Baru</span>
+             </a>
+             
+             <button 
+                onClick={onClose}
+                className="mt-6 text-[10px] font-black text-slate-300 uppercase tracking-widest hover:text-red-500 transition-colors"
+             >
+                Kembali ke Katalog
+             </button>
+           </div>
+         )}
 
          {/* Error / Fallback Overlay */}
          {hasError && (

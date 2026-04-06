@@ -37,8 +37,16 @@ const EBookViewer = ({ book, onClose, user }) => {
         readerRef.current.requestFullscreen().catch(() => {})
       }
     }, 500)
+
+    // SAFETY BREAK: Jika loading belum selesai dalam 10 detik, paksa stop agar user bisa melihat status
+    const loadingSafety = setTimeout(() => {
+       setIsLoading(false);
+    }, 10000);
     
-    return () => clearTimeout(timer)
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(loadingSafety);
+    }
   }, [book, user]);
 
   // Handle ESC key and Fullscreen Change
@@ -180,16 +188,24 @@ const EBookViewer = ({ book, onClose, user }) => {
            <div className="w-full h-full bg-slate-100 overflow-y-auto overflow-x-hidden p-4 md:p-8 space-y-8 flex flex-col items-center custom-scrollbar">
               <div className="max-w-3xl w-full space-y-12 pb-24">
                 {/* Loop pages (limit to 100 for safety, though perpus usually has less) */}
-                {[...Array(100)].map((_, i) => (
-                  <div key={i} className="relative group flex flex-col items-center">
+                {[...Array(60)].map((_, i) => (
+                  <div key={i} className="relative group flex flex-col items-center w-full">
                     <img 
-                      src={`https://images.weserv.nl/?url=image-v2.free-ebook.my.id/sketch/${bookSlug}/${bookSlug}-${i}.jpg&w=1200`}
+                      src={`https://images.weserv.nl/?url=image-v2.free-ebook.my.id/sketch/${bookSlug}/${bookSlug}-${i}.jpg&w=1000`}
+                      referrerPolicy="no-referrer"
                       alt={`Halaman ${i+1}`}
                       className="w-full shadow-2xl rounded-sm border border-slate-200 bg-white"
                       loading="lazy"
-                      onLoad={() => i === 0 && setIsLoading(false)}
+                      onLoad={() => {
+                        if (i === 0) setIsLoading(false);
+                      }}
                       onError={(e) => {
-                        // Hide the image if it fails (end of book)
+                        // Jika halaman 0 gagal, beri tahu sistem
+                        if (i === 0) {
+                           setIsLoading(false);
+                           setHasError(true);
+                        }
+                        // Sembunyikan halaman yang tidak ada (akhir buku)
                         e.target.parentElement.style.display = 'none';
                       }}
                     />

@@ -438,92 +438,93 @@ const ModalAnggota = ({ onClose }) => {
         {/* User list */}
         <div className="overflow-y-auto space-y-2 flex-1">
           {loading ? (
-             <div className="text-center py-12">
-               <RefreshCcw size={24} className="animate-spin text-primary-500 mx-auto mb-2" />
-               <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Memuat anggota...</p>
-             </div>
+            <div className="text-center py-12">
+              <RefreshCcw size={24} className="animate-spin text-primary-500 mx-auto mb-2" />
+              <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Memuat anggota...</p>
+            </div>
           ) : (
-            filtered.map(u => (
-            <div key={u.id || u.username}>
-              {editingId === u.id ? (
-                // ── EDIT FORM ────────────────────────────
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                  className="bg-primary-50 border border-primary-100 rounded-2xl p-4 space-y-3">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Nama Lengkap</label>
-                      <input value={editForm.full_name} onChange={e => setEditForm(p=>({...p, full_name: e.target.value}))}
-                        className="w-full bg-white rounded-xl px-3 py-2 text-xs font-bold outline-none focus:ring-2 focus:ring-primary-400 border-none" />
+            filtered.map((u) => (
+              <div key={u.username || u.id}>
+                {editingId === u.id ? (
+                  // ── EDIT FORM ────────────────────────────
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                    className="bg-primary-50 border border-primary-100 rounded-2xl p-4 space-y-3">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Nama Lengkap</label>
+                        <input value={editForm.full_name} onChange={e => setEditForm(p=>({...p, full_name: e.target.value}))}
+                          className="w-full bg-white rounded-xl px-3 py-2 text-xs font-bold outline-none focus:ring-2 focus:ring-primary-400 border-none" />
+                      </div>
+                      <div>
+                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Username</label>
+                        <input value={editForm.username} onChange={e => setEditForm(p=>({...p, username: e.target.value}))}
+                          className="w-full bg-white rounded-xl px-3 py-2 text-xs font-bold outline-none focus:ring-2 focus:ring-primary-400 border-none" />
+                      </div>
+                      <div>
+                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Role</label>
+                        <select value={editForm.role} onChange={e => setEditForm(p=>({...p, role: e.target.value}))}
+                          className="w-full bg-white rounded-xl px-3 py-2 text-xs font-bold outline-none focus:ring-2 focus:ring-primary-400 border-none">
+                          <option value="student">Siswa</option>
+                          <option value="teacher">Guru</option>
+                          <option value="librarian">Pustakawan</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Kelas (jika siswa)</label>
+                        <select value={editForm.grade || ''} onChange={e => setEditForm(p=>({...p, grade: e.target.value}))}
+                          className="w-full bg-white rounded-xl px-3 py-2 text-xs font-bold outline-none focus:ring-2 focus:ring-primary-400 border-none">
+                          <option value="">-</option>
+                          <option value="7">7</option>
+                          <option value="8">8</option>
+                          <option value="9">9</option>
+                        </select>
+                      </div>
+                      <div className="col-span-2">
+                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Ganti Password Baru</label>
+                        <input 
+                          type="password"
+                          placeholder="Ketikan password baru untuk meriset..." 
+                          value={editForm.password || ''} 
+                          onChange={e => setEditForm(p=>({...p, password: e.target.value}))}
+                          className="w-full bg-white rounded-xl px-4 py-3 text-sm font-bold outline-none focus:ring-2 focus:ring-primary-400 border-none" 
+                        />
+                        <p className="text-[9px] text-slate-400 mt-1 uppercase tracking-wider font-bold">Kosongkan jika tidak ingin mengganti password</p>
+                      </div>
                     </div>
-                    <div>
-                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Username</label>
-                      <input value={editForm.username} onChange={e => setEditForm(p=>({...p, username: e.target.value}))}
-                        className="w-full bg-white rounded-xl px-3 py-2 text-xs font-bold outline-none focus:ring-2 focus:ring-primary-400 border-none" />
+                    <div className="flex gap-2">
+                      <button onClick={cancelEdit} className="flex-1 py-2 bg-white text-slate-500 rounded-xl font-black text-xs hover:bg-slate-100 transition-colors">Batal</button>
+                      <button onClick={saveEdit} className="flex-1 py-2 bg-primary-600 text-white rounded-xl font-black text-xs hover:bg-primary-700 transition-all active:scale-95 flex items-center justify-center space-x-1">
+                        <Save size={14} /><span>Simpan</span>
+                      </button>
                     </div>
-                    <div>
-                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Role</label>
-                      <select value={editForm.role} onChange={e => setEditForm(p=>({...p, role: e.target.value}))}
-                        className="w-full bg-white rounded-xl px-3 py-2 text-xs font-bold outline-none focus:ring-2 focus:ring-primary-400 border-none">
-                        <option value="student">Siswa</option>
-                        <option value="teacher">Guru</option>
-                        <option value="librarian">Pustakawan</option>
-                      </select>
+                  </motion.div>
+                ) : (
+                  // ── USER ROW ──────────────────────────────
+                  <div className="flex items-center px-3 py-3 bg-slate-50 hover:bg-slate-100 rounded-2xl transition-colors group">
+                    <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white text-xs font-black mr-3 shrink-0"
+                      style={{ background: AVATAR_COLORS[u.role] || '#6366f1' }}>
+                      {u.full_name?.split(' ').map(w=>w[0]).slice(0,2).join('')}
                     </div>
-                    <div>
-                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Kelas (jika siswa)</label>
-                      <select value={editForm.grade || ''} onChange={e => setEditForm(p=>({...p, grade: e.target.value}))}
-                        className="w-full bg-white rounded-xl px-3 py-2 text-xs font-bold outline-none focus:ring-2 focus:ring-primary-400 border-none">
-                        <option value="">-</option>
-                        <option value="7">7</option>
-                        <option value="8">8</option>
-                        <option value="9">9</option>
-                      </select>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-black text-slate-800 truncate">{u.full_name}</p>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className={`text-[9px] font-black px-2 py-0.5 rounded-lg uppercase ${ROLE_COLORS[u.role]}`}>
+                          {u.role === 'teacher' ? 'Guru' : u.role === 'librarian' ? 'Pustakawan' : `Kls ${u.grade}`}
+                        </span>
+                        <span className="text-[10px] text-slate-400 font-mono truncate">{u.username}</span>
+                      </div>
                     </div>
-                    <div className="col-span-2">
-                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Ganti Password Baru</label>
-                      <input 
-                        type="password"
-                        placeholder="Ketikan password baru untuk meriset..." 
-                        value={editForm.password || ''} 
-                        onChange={e => setEditForm(p=>({...p, password: e.target.value}))}
-                        className="w-full bg-white rounded-xl px-4 py-3 text-sm font-bold outline-none focus:ring-2 focus:ring-primary-400 border-none" 
-                      />
-                      <p className="text-[9px] text-slate-400 mt-1 uppercase tracking-wider font-bold">Kosongkan jika tidak ingin mengganti password</p>
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <button onClick={cancelEdit} className="flex-1 py-2 bg-white text-slate-500 rounded-xl font-black text-xs hover:bg-slate-100 transition-colors">Batal</button>
-                    <button onClick={saveEdit} className="flex-1 py-2 bg-primary-600 text-white rounded-xl font-black text-xs hover:bg-primary-700 transition-all active:scale-95 flex items-center justify-center space-x-1">
-                      <Save size={14} /><span>Simpan</span>
+                    <button
+                      onClick={() => startEdit(u)}
+                      className="opacity-0 group-hover:opacity-100 p-2 text-slate-400 hover:text-primary-600 transition-all ml-2 shrink-0"
+                      title="Edit">
+                      <Edit2 size={16} />
                     </button>
                   </div>
-                </motion.div>
-              ) : (
-                // ── USER ROW ──────────────────────────────
-                <div className="flex items-center px-3 py-3 bg-slate-50 hover:bg-slate-100 rounded-2xl transition-colors group">
-                  <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white text-xs font-black mr-3 shrink-0"
-                    style={{ background: AVATAR_COLORS[u.role] || '#6366f1' }}>
-                    {u.full_name.split(' ').map(w=>w[0]).slice(0,2).join('')}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-black text-slate-800 truncate">{u.full_name}</p>
-                    <div className="flex items-center gap-2 mt-0.5">
-                      <span className={`text-[9px] font-black px-2 py-0.5 rounded-lg uppercase ${ROLE_COLORS[u.role]}`}>
-                        {u.role === 'teacher' ? 'Guru' : u.role === 'librarian' ? 'Pustakawan' : `Kls ${u.grade}`}
-                      </span>
-                      <span className="text-[10px] text-slate-400 font-mono truncate">{u.username}</span>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => startEdit(u)}
-                    className="opacity-0 group-hover:opacity-100 p-2 text-slate-400 hover:text-primary-600 transition-all ml-2 shrink-0"
-                    title="Edit">
-                    <Edit2 size={16} />
-                  </button>
-                </div>
-              )}
-            </div>
-          ))}
+                )}
+              </div>
+            ))
+          )}
           {filtered.length === 0 && !loading && (
             <p className="text-center text-slate-400 py-8 font-medium text-sm">Tidak ada anggota ditemukan.</p>
           )}

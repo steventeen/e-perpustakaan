@@ -206,11 +206,18 @@ function App() {
   const handleLogout = () => setShowLogoutConfirm(true)
 
   const confirmLogout = () => {
+    // 1. Simpan salinan sementara atau tutup modal dulu agar tidak crash
+    setShowLogoutConfirm(false)
+    
+    // 2. Bersihkan sesi dari localStorage secara paksa
+    localStorage.removeItem('epus_session_user')
+    localStorage.removeItem('epus_session')
+    
+    // 3. Reset state aplikasi
     setUser(null)
     setRole('student')
     setActiveTab('home')
     setReadingBook(null)
-    setShowLogoutConfirm(false)
   }
 
   const openReader = async (book) => {
@@ -341,9 +348,11 @@ function App() {
             >
               <div className="text-5xl mb-4">👋</div>
               <h3 className="text-xl font-black text-slate-800 mb-2">Keluar Akun?</h3>
-              <p className="text-slate-400 font-medium text-sm mb-2">
-                Login sebagai: <span className="font-black text-slate-700">{user.display}</span>
-              </p>
+              {user && (
+                <p className="text-slate-400 font-medium text-sm mb-2">
+                  Login sebagai: <span className="font-black text-slate-700">{user.display}</span>
+                </p>
+              )}
               <p className="text-slate-400 font-medium text-sm mb-8">Anda akan kembali ke halaman login.</p>
               <div className="flex gap-3">
                 <button onClick={() => setShowLogoutConfirm(false)}

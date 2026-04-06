@@ -362,9 +362,12 @@ const ModalAnggota = ({ onClose }) => {
   }, [])
 
   const filtered = users.filter(u => {
-    const matchSearch = u.full_name.toLowerCase().includes(search.toLowerCase()) ||
-                        u.username.toLowerCase().includes(search.toLowerCase())
-    const matchFilter = filterG === 'all' || u.role === filterG || u.grade === filterG
+    const fn = (u.full_name || '').toLowerCase()
+    const un = (u.username || '').toLowerCase()
+    const s  = search.toLowerCase()
+    
+    const matchSearch = fn.includes(s) || un.includes(s)
+    const matchFilter = filterG === 'all' || u.role === filterG || u.grade === filterG || u.grade_level === filterG
     return matchSearch && matchFilter
   })
 
@@ -402,11 +405,12 @@ const ModalAnggota = ({ onClose }) => {
   const cancelEdit = () => setEditingId(null)
 
   const ROLE_COLORS = {
-    student:   'bg-emerald-100 text-emerald-700',
-    teacher:   'bg-amber-100 text-amber-700',
-    librarian: 'bg-primary-100 text-primary-700',
+    student:    'bg-emerald-100 text-emerald-700',
+    teacher:    'bg-amber-100 text-amber-700',
+    librarian:  'bg-primary-100 text-primary-700',
+    masyarakat: 'bg-indigo-100 text-indigo-700',
   }
-  const AVATAR_COLORS = { student: '#059669', teacher: '#d97706', librarian: '#4f46e5' }
+  const AVATAR_COLORS = { student: '#059669', teacher: '#d97706', librarian: '#4f46e5', masyarakat: '#6366f1' }
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
@@ -508,8 +512,11 @@ const ModalAnggota = ({ onClose }) => {
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-black text-slate-800 truncate">{u.full_name || u.username}</p>
                       <div className="flex items-center gap-2 mt-0.5">
-                        <span className={`text-[9px] font-black px-2 py-0.5 rounded-lg uppercase ${ROLE_COLORS[u.role]}`}>
-                          {u.role === 'teacher' ? 'Guru' : u.role === 'librarian' ? 'Pustakawan' : `Kls ${u.grade}`}
+                        <span className={`text-[9px] font-black px-2 py-0.5 rounded-lg uppercase ${ROLE_COLORS[u.role] || 'bg-slate-100 text-slate-500'}`}>
+                          {u.role === 'teacher' ? 'Guru' : 
+                           u.role === 'librarian' ? 'Pustakawan' : 
+                           u.role === 'masyarakat' ? 'Umum' : 
+                           `Kls ${u.grade || u.grade_level || '-'}`}
                         </span>
                         <span className="text-[10px] text-slate-400 font-mono truncate">{u.username}</span>
                       </div>

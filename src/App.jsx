@@ -91,11 +91,19 @@ function App() {
 
   const [readingBook, setReadingBook] = useState(null)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
-  const [schoolIdentity, setSchoolIdentity] = useState({
-    name: 'SMP NEGERI 2 AMURANG TIMUR (SATAP)',
-    department: 'Kementerian Pendidikan Dasar',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/9/9d/Logo_Tut_Wuri_Handayani.png'
+  const [schoolIdentity, setSchoolIdentity] = useState(() => {
+    const saved = localStorage.getItem('epus_school_identity')
+    return saved ? JSON.parse(saved) : {
+      name: 'SMP NEGERI 2 AMURANG TIMUR (SATAP)',
+      department: 'Kementerian Pendidikan Dasar',
+      logo: 'https://upload.wikimedia.org/wikipedia/commons/9/9d/Logo_Tut_Wuri_Handayani.png'
+    }
   })
+
+  useEffect(() => {
+    localStorage.setItem('epus_school_identity', JSON.stringify(schoolIdentity))
+  }, [schoolIdentity])
+
   const [books, setBooks] = useState([])
   const [isLoadingBooks, setIsLoadingBooks] = useState(true)
   const [categories, setCategories] = useState([])
@@ -106,7 +114,48 @@ function App() {
     fetchBooks()
     fetchCategories()
     fetchStats()
+    fetchSettings()
   }, [])
+
+  const fetchSettings = async () => {
+    try {
+      const { data, error } = await supabase.from('settings').select('*')
+      if (data && !error) {
+        const identity = { ...schoolIdentity }
+        data.forEach(s => {
+          if (s.key === 'school_name') identity.name = s.value
+          if (s.key === 'school_department') identity.department = s.value
+          if (s.key === 'school_logo') identity.logo = s.value
+          
+          // Persist SMTP & Template to localStorage for components that need them
+          if (s.key === 'email_host') {
+            const current = JSON.parse(localStorage.getItem('epus_smtp') || '{}')
+            localStorage.setItem('epus_smtp', JSON.stringify({ ...current, host: s.value }))
+          }
+          if (s.key === 'email_port') {
+            const current = JSON.parse(localStorage.getItem('epus_smtp') || '{}')
+            localStorage.setItem('epus_smtp', JSON.stringify({ ...current, port: s.value }))
+          }
+          if (s.key === 'email_user') {
+            const current = JSON.parse(localStorage.getItem('epus_smtp') || '{}')
+            localStorage.setItem('epus_smtp', JSON.stringify({ ...current, user: s.value }))
+          }
+          if (s.key === 'email_password') {
+            const current = JSON.parse(localStorage.getItem('epus_smtp') || '{}')
+            localStorage.setItem('epus_smtp', JSON.stringify({ ...current, pass: s.value }))
+          }
+          if (s.key === 'email_from_name') {
+            const current = JSON.parse(localStorage.getItem('epus_smtp') || '{}')
+            localStorage.setItem('epus_smtp', JSON.stringify({ ...current, sender: s.value }))
+          }
+          if (s.key === 'email_template') {
+            localStorage.setItem('epus_email_template', s.value)
+          }
+        })
+        setSchoolIdentity(identity)
+      }
+    } catch (e) { console.error('Fetch Settings Error:', e) }
+  }
 
   const fetchStats = async () => {
     try {

@@ -521,6 +521,10 @@ const LibrarianPanel = ({ categories = [], schoolIdentity, setSchoolIdentity, bo
   const [toast, setToast] = useState(null)
   const [identityForm, setIdentityForm] = useState(schoolIdentity || { name: '', department: '', logo: '' })
 
+  React.useEffect(() => {
+    if (schoolIdentity) setIdentityForm(schoolIdentity)
+  }, [schoolIdentity])
+
   const [smtpForm, setSmtpForm] = useState(() => {
     const saved = localStorage.getItem('epus_smtp')
     return saved ? JSON.parse(saved) : { host: 'smtp.gmail.com', port: '465', user: '', pass: '', sender: 'Notifikasi Perpustakaan' }
@@ -828,9 +832,22 @@ const LibrarianPanel = ({ categories = [], schoolIdentity, setSchoolIdentity, bo
                 </div>
               </div>
               <button 
-                onClick={() => { 
-                  setSchoolIdentity(identityForm); 
-                  showToast('✅ Pengaturan Identitas dan Logo berhasil disimpan!');
+                onClick={async () => { 
+                  showToast('⏳ Menyimpan ke sistem...', 'info');
+                  try {
+                    // Update ke Supabase satu per satu atau gunakan rpc jika ada
+                    await supabase.from('settings').upsert([
+                      { key: 'school_name', value: identityForm.name },
+                      { key: 'school_department', value: identityForm.department },
+                      { key: 'school_logo', value: identityForm.logo }
+                    ], { onConflict: 'key' });
+                    
+                    setSchoolIdentity(identityForm); 
+                    showToast('✅ Pengaturan Identitas dan Logo berhasil disimpan ke sistem pusat!');
+                  } catch (e) {
+                    showToast('❌ Gagal menyimpan ke server, tapi tersimpan lokal.', 'error');
+                    setSchoolIdentity(identityForm); 
+                  }
                 }}
                 className="w-full bg-slate-800 text-white font-black text-sm py-4 rounded-2xl hover:bg-black transition-colors active:scale-95">
                 💾 Simpan Identitas
@@ -866,9 +883,23 @@ const LibrarianPanel = ({ categories = [], schoolIdentity, setSchoolIdentity, bo
                 <input type="text" value={smtpForm.sender} onChange={e => setSmtpForm(p=>({...p, sender: e.target.value}))} className="w-full bg-slate-50 border-none rounded-2xl p-3 text-sm focus:ring-2 focus:ring-primary-500 outline-none font-medium" />
               </div>
               <button 
-                onClick={() => { 
-                  localStorage.setItem('epus_smtp', JSON.stringify(smtpForm));
-                  showToast('✅ Konfigurasi SMTP berhasil disimpan!');
+                onClick={async () => { 
+                  showToast('⏳ Menyimpan Konfigurasi SMTP...', 'info');
+                  try {
+                    await supabase.from('settings').upsert([
+                      { key: 'email_host', value: smtpForm.host },
+                      { key: 'email_port', value: smtpForm.port },
+                      { key: 'email_user', value: smtpForm.user },
+                      { key: 'email_password', value: smtpForm.pass },
+                      { key: 'email_from_name', value: smtpForm.sender }
+                    ], { onConflict: 'key' });
+                    
+                    localStorage.setItem('epus_smtp', JSON.stringify(smtpForm));
+                    showToast('✅ Konfigurasi SMTP berhasil disimpan ke sistem!');
+                  } catch (e) {
+                    localStorage.setItem('epus_smtp', JSON.stringify(smtpForm));
+                    showToast('⚠️ Tersimpan di browser ini saja (Gagal ke server).', 'warning');
+                  }
                 }}
                 className="md:col-span-2 w-full bg-primary-600 text-white font-black text-sm py-4 rounded-2xl hover:bg-primary-700 transition-colors active:scale-95 shadow-lg shadow-primary-100">
                 💾 Simpan Konfigurasi SMTP
@@ -891,9 +922,19 @@ const LibrarianPanel = ({ categories = [], schoolIdentity, setSchoolIdentity, bo
                 className="w-full bg-slate-50 border-none rounded-2xl p-4 text-sm focus:ring-2 focus:ring-purple-500 outline-none font-medium resize-none"
               />
               <button 
-                onClick={() => { 
-                  localStorage.setItem('epus_email_template', emailTemplate);
-                  showToast('✅ Template Email berhasil diperbarui!');
+                onClick={async () => { 
+                  showToast('⏳ Menyimpan Template...', 'info');
+                  try {
+                    await supabase.from('settings').upsert([
+                      { key: 'email_template', value: emailTemplate }
+                    ], { onConflict: 'key' });
+                    
+                    localStorage.setItem('epus_email_template', emailTemplate);
+                    showToast('✅ Template Email berhasil diperbarui di sistem!');
+                  } catch (e) {
+                    localStorage.setItem('epus_email_template', emailTemplate);
+                    showToast('⚠️ Tersimpan di browser ini saja.', 'warning');
+                  }
                 }}
                 className="w-full bg-purple-600 text-white font-black text-sm py-4 rounded-2xl hover:bg-purple-700 transition-colors active:scale-95 shadow-lg shadow-purple-100">
                 💾 Simpan Template Email

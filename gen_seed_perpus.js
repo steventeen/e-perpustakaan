@@ -15,14 +15,14 @@ const books = [
   { title: '14 Marketing Plan', author: 'Marketing Expert', category: 'Lainnya', description: 'Strategi pemasaran digital bisnis modern.' }
 ];
 
-let sql = "-- SQL Seed for Perpus.org collection (RELATIONAL VERSION)\n";
-sql += "-- Pastikan kategori yang digunakan sudah ada di tabel 'categories'\n\n";
+let sql = "-- SQL Seed for Perpus.org collection (V3 - FINAL SCHEMA)\n";
+sql += "-- Menyesuaikan dengan kolom: title, author, description, category_id, requires_approval, file_url\n\n";
 
 books.forEach(b => {
-  sql += `INSERT INTO books (title, author, category_id, description, is_available) \n`;
-  sql += `SELECT '${b.title.replace(/'/g, "''")}', '${b.author.replace(/'/g, "''")}', id, '${b.description.replace(/'/g, "''")}', true \n`;
+  sql += `INSERT INTO books (title, author, category_id, description, requires_approval, file_url) \n`;
+  sql += `SELECT '${b.title.replace(/'/g, "''")}', '${b.author.replace(/'/g, "''")}', id, '${b.description.replace(/'/g, "''")}', false, '#' \n`;
   sql += `FROM categories WHERE name = '${b.category}' LIMIT 1;\n\n`;
 });
 
 fs.writeFileSync('seed_perpus.sql', sql, 'utf8');
-console.log("File seed_perpus.sql berhasil diperbarui dengan relasi category_id.");
+console.log("File seed_perpus.sql berhasil diperbarui dengan skema v3 (FINAL).");

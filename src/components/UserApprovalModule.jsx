@@ -139,9 +139,10 @@ const UserApprovalModule = ({ adminUser }) => {
           full_name: req.full_name || req.username,
           role:      'masyarakat',
           email:     req.email,
-          phone:     req.phone,
         })
-      } catch (_) {}
+      } catch (err) {
+        console.error('Migration Error:', err)
+      }
     }
 
     // 5. Kirim email

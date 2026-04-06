@@ -329,6 +329,7 @@ const ModalAnggota = ({ onClose }) => {
     try {
       // 1. Ambil data dari Supabase (Pusat)
       const { data: dbProfiles } = await supabase.from('profiles').select('*')
+      const { data: approvedRequests } = await supabase.from('user_requests').select('*').eq('status', 'approved')
       
       // 2. Gabungkan dengan USERS_DATA (Hardcoded) dan localStorage (Perubahan Lokal)
       const localUsers = JSON.parse(localStorage.getItem('epus_users') || '[]')
@@ -340,6 +341,22 @@ const ModalAnggota = ({ onClose }) => {
           const idx = merged.findIndex(u => u.username === p.username)
           if (idx > -1) merged[idx] = { ...merged[idx], ...p, id: p.id || merged[idx].id }
           else merged.push({ ...p, id: p.id || Date.now() + Math.random() })
+        })
+      }
+
+      // Gabungkan pendaftar yang sudah disetujui tapi belum masuk ke profiles (Back-up)
+      if (approvedRequests) {
+        approvedRequests.forEach(req => {
+          const idx = merged.findIndex(u => u.username === req.username)
+          if (idx === -1) {
+            merged.push({ 
+              id: req.id || Date.now() + Math.random(),
+              username:  req.username,
+              full_name: req.full_name || req.username,
+              role:      'masyarakat',
+              email:     req.email
+            })
+          }
         })
       }
 

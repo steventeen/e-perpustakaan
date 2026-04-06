@@ -52,7 +52,7 @@ const EBookViewer = ({ book, onClose, user }) => {
   // Handle ESC key and Fullscreen Change
   useEffect(() => {
     const handleEsc = (e) => {
-      if (e.key === 'Escape') onClose()
+      if (e.key === 'Escape') onClose && onClose()
     }
     const handleFsChange = () => {
       setIsFullscreen(!!document.fullscreenElement)
@@ -67,13 +67,17 @@ const EBookViewer = ({ book, onClose, user }) => {
 
   // EXTRACT SLUG FOR NATIVE READER
   const getBookSlug = (url) => {
-    if (!url) return null;
-    const parts = url.split('/');
-    return parts[parts.length - 1];
+    if (!url || typeof url !== 'string') return null;
+    try {
+      const cleanUrl = url.endsWith('/') ? url.slice(0, -1) : url;
+      const parts = cleanUrl.split('/');
+      const slug = parts[parts.length - 1];
+      return slug || null;
+    } catch(e) { return null; }
   }
   
   const bookSlug = getBookSlug(book?.file_url);
-  const isPerpusOrg = book?.file_url?.includes('perpus.org');
+  const isPerpusOrg = book?.file_url?.includes('perpus.org') || false;
 
   // LOGIK PENYEMBUNYIAN/PROXY: Gunakan Google Docs Viewer untuk PDF yang diblokir CORS
   const getReaderUrl = (url, mode) => {
@@ -187,11 +191,11 @@ const EBookViewer = ({ book, onClose, user }) => {
            /* SEAMLESS NATIVE READER UNTUK PERPUS.ORG */
            <div className="w-full h-full bg-slate-100 overflow-y-auto overflow-x-hidden p-4 md:p-8 space-y-8 flex flex-col items-center custom-scrollbar">
               <div className="max-w-3xl w-full space-y-12 pb-24">
-                {/* Loop pages (limit to 100 for safety, though perpus usually has less) */}
-                {[...Array(60)].map((_, i) => (
+                {/* Loop pages (limit to 60 for performance, perpus usually has less) */}
+                {bookSlug && [...Array(60)].map((_, i) => (
                   <div key={i} className="relative group flex flex-col items-center w-full">
                     <img 
-                      src={`https://images.weserv.nl/?url=image-v2.free-ebook.my.id/sketch/${bookSlug}/${bookSlug}-${i}.jpg&w=1000`}
+                      src={`https://images.weserv.nl/?url=${encodeURIComponent(`https://image-v2.free-ebook.my.id/sketch/${bookSlug}/${bookSlug}-${i}.jpg`)}&w=1000`}
                       referrerPolicy="no-referrer"
                       alt={`Halaman ${i+1}`}
                       className="w-full shadow-2xl rounded-sm border border-slate-200 bg-white"
@@ -206,7 +210,9 @@ const EBookViewer = ({ book, onClose, user }) => {
                            setHasError(true);
                         }
                         // Sembunyikan halaman yang tidak ada (akhir buku)
-                        e.target.parentElement.style.display = 'none';
+                        if (e.target.parentElement) {
+                           e.target.parentElement.style.display = 'none';
+                        }
                       }}
                     />
                     <div className="mt-4 px-4 py-1 bg-slate-800/10 text-slate-400 text-[10px] font-black uppercase tracking-widest rounded-full opacity-0 group-hover:opacity-100 transition-opacity">

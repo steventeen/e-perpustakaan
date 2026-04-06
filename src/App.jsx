@@ -187,7 +187,13 @@ function App() {
 
   const fetchBooks = async () => {
     setIsLoadingBooks(true)
-    const { data, error } = await supabase.from('books').select(`*, categories (name)`)
+    // Supabase default is 1000, we override with range to see all 2000+ books
+    const { data, error } = await supabase
+      .from('books')
+      .select(`*, categories (name)`)
+      .range(0, 5000) // Increase limit to see the whole 2000+ catalog
+      .order('id', { ascending: false });
+      
     if (!error) {
       setBooks(data.map(b => ({ ...b, category: b.categories?.name || 'Lainnya' })))
     }

@@ -18,32 +18,46 @@ export async function onRequest(context) {
   }
 
   try {
-    // Fetch data langsung ke REST API Supabase (PostgREST)
-    const response = await fetch(`${SUPABASE_URL}/rest/v1/books?select=*,categories(name)`, {
-      headers: {
-        "apikey": SUPABASE_ANON_KEY,
-        "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
-        "Content-Type": "application/json"
-      }
-    });
+    // Penarikan data bertahap untuk menembus limit 1000 Supabase/PostgREST
+    let allBooks = [];
+    let from = 0;
+    const step = 1000;
+    let hasMore = true;
 
-    const data = await response.json();
-    
-    // Clean up data
-    const books = data.map(b => ({
-      id: b.id,
-      title: b.title,
-      author: b.author,
-      category: b.categories?.name || 'Lainnya',
-      cover_url: b.cover_url,
-      description: b.description,
-      is_available: b.is_available
-    }));
+    while (hasMore) {
+      const response = await fetch(`${SUPABASE_URL}/rest/v1/books?select=*,categories(name)&offset=${from}&limit=${step}&order=id.desc`, {
+        headers: {
+          "apikey": SUPABASE_ANON_KEY,
+          "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+          "Content-Type": "application/json"
+        }
+      });
+
+      const data = await response.json();
+      
+      if (!data || data.length === 0) {
+        hasMore = false;
+      } else {
+        const mapped = data.map(b => ({
+          id: b.id,
+          title: b.title,
+          author: b.author,
+          category: b.categories?.name || 'Lainnya',
+          cover_url: b.cover_url,
+          description: b.description,
+          is_available: b.is_available
+        }));
+        
+        allBooks = [...allBooks, ...mapped];
+        if (data.length < step) hasMore = false;
+        from += step;
+      }
+    }
 
     return new Response(JSON.stringify({
       success: true,
-      count: books.length,
-      data: books,
+      count: allBooks.length,
+      data: allBooks,
       timestamp: new Date().toISOString()
     }), {
       headers: { 

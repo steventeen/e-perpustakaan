@@ -602,7 +602,10 @@ const LibrarianPanel = ({ categories = [], schoolIdentity, setSchoolIdentity, bo
   const [editingBook, setEditingBook] = useState(null)
   const [filterCat, setFilterCat] = useState('Semua')
   const [searchBook, setSearchBook] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [rowsPerPage, setRowsPerPage] = useState(10)
   const [toast, setToast] = useState(null)
+
   const [identityForm, setIdentityForm] = useState(schoolIdentity || { name: '', department: '', logo: '' })
 
   React.useEffect(() => {
@@ -679,11 +682,22 @@ const LibrarianPanel = ({ categories = [], schoolIdentity, setSchoolIdentity, bo
   }
 
   const filteredInventory = books.filter(b => {
-    const matchCat = filterCat === 'Semua' || b.category === filterCat
-    const matchSearch = b.title.toLowerCase().includes(searchBook.toLowerCase()) ||
-                        b.author.toLowerCase().includes(searchBook.toLowerCase())
+    const matchCat = filterCat === 'Semua' || b.category === filterCat || b.categories?.name === filterCat
+    const matchSearch = (b.title || '').toLowerCase().includes(searchBook.toLowerCase()) ||
+                        (b.author || '').toLowerCase().includes(searchBook.toLowerCase())
     return matchCat && matchSearch
   })
+
+  // Reset page when filter changes
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchBook, filterCat, rowsPerPage])
+
+  const indexOfLastRow = currentPage * rowsPerPage
+  const indexOfFirstRow = indexOfLastRow - rowsPerPage
+  const currentRows = filteredInventory.slice(indexOfFirstRow, indexOfLastRow)
+  const totalPages = Math.ceil(filteredInventory.length / rowsPerPage)
+
 
   const [totalUsers, setTotalUsers] = useState(USERS_DATA.length)
 
@@ -778,11 +792,23 @@ const LibrarianPanel = ({ categories = [], schoolIdentity, setSchoolIdentity, bo
             </div>
           </div>
 
-          <div className="flex justify-between items-center text-xs text-slate-400 font-black uppercase tracking-widest px-2">
-            <span>Menampilkan {filteredInventory.length} dari {books.length} buku</span>
+          <div className="flex flex-col sm:flex-row justify-between items-center bg-white p-4 rounded-3xl border border-slate-100 shadow-sm gap-4">
+            <div className="flex items-center space-x-2">
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Tampilkan:</span>
+              <select 
+                value={rowsPerPage} 
+                onChange={e => setRowsPerPage(Number(e.target.value))}
+                className="bg-slate-50 border-none rounded-xl px-3 py-1.5 text-xs font-black text-primary-600 outline-none cursor-pointer">
+                {[10, 25, 50, 100].map(v => <option key={v} value={v}>{v} Buku</option>)}
+              </select>
+            </div>
+            <div className="text-[10px] text-slate-400 font-black uppercase tracking-widest text-center">
+              Menampilkan {Math.min(indexOfFirstRow + 1, filteredInventory.length)} - {Math.min(indexOfLastRow, filteredInventory.length)} dari {filteredInventory.length} (Total {books.length})
+            </div>
           </div>
 
-          {filteredInventory.map((book, i) => (
+
+          {currentRows.map((book, i) => (
             <motion.div key={book.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.025 }}
               className="bg-white p-4 rounded-3xl flex items-center justify-between shadow-sm border border-slate-100 group">
               <div className="flex items-center space-x-4 flex-1 min-w-0">
@@ -818,6 +844,28 @@ const LibrarianPanel = ({ categories = [], schoolIdentity, setSchoolIdentity, bo
               </div>
             </motion.div>
           ))}
+
+          {/* Pagination Navigation */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center space-x-2 pt-4">
+              <button 
+                disabled={currentPage === 1}
+                onClick={() => { setCurrentPage(p => p - 1); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
+                className="px-4 py-2 bg-white border border-slate-100 rounded-xl text-xs font-black text-slate-500 disabled:opacity-30 hover:bg-slate-50 transition-all uppercase tracking-widest">
+                Sebelumnya
+              </button>
+              <div className="bg-white border border-slate-100 px-4 py-2 rounded-xl text-xs font-black text-primary-600 uppercase tracking-widest">
+                Hal {currentPage} / {totalPages}
+              </div>
+              <button 
+                disabled={currentPage === totalPages}
+                onClick={() => { setCurrentPage(p => p + 1); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
+                className="px-4 py-2 bg-white border border-slate-100 rounded-xl text-xs font-black text-slate-500 disabled:opacity-30 hover:bg-slate-50 transition-all uppercase tracking-widest">
+                Selanjutnya
+              </button>
+            </div>
+          )}
+
 
           {filteredInventory.length === 0 && (
             <div className="text-center py-16 text-slate-300">

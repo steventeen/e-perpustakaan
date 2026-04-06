@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { BookOpen, Settings, HelpCircle, ChevronRight, LogOut, User, BarChart3, FileText, Download, Info, Phone, Mail, Globe, X, Clock, AlertTriangle } from 'lucide-react'
 import { supabase } from '../lib/supabase'
+import { safeParseStorage, setStorage } from '../utils/storage'
 
 // ── Settings Page ──────────────────────────────────────────────
 export const SettingsPage = ({ role, setRole }) => {
@@ -186,7 +187,8 @@ export const ReportsPage = ({ stats, booksCount }) => {
   const [modalLoading, setModalLoading] = useState(false)
 
   useEffect(() => {
-    const savedLogs = JSON.parse(localStorage.getItem('epus_activity_logs') || '[]')
+    const savedLogs = safeParseStorage('epus_activity_logs', [])
+
     setLogs(savedLogs)
   }, [])
 

@@ -9,15 +9,20 @@ const books = [
   { title: 'Delivering Happiness', author: 'Tony Hsieh', category: 'Bisnis dan Ekonomi', description: 'Sukses Zappos membangun budaya perusahaan.' },
   { title: '190 Dark Psychology', author: 'Unknown', category: 'Pengembangan Diri', description: 'Mempelajari sisi gelap psikologi manusia.' },
   { title: 'Buku KIA (Kesehatan Ibu dan Anak)', author: 'Kemenkes RI', category: 'Parenting', description: 'Panduan wajib kesehatan ibu hamil dan balita.' },
-  { title: 'Pirates and Emperors', author: 'Noam Chomsky', category: 'Fisik Sejarah', description: 'Analisis tajam sejarah politik internasional.' },
-  { title: 'Mengapa Kita Harus Shalat', author: 'Penerbit Anak', category: 'Buku Anak Anak', description: 'Edukasi agama menyenangkan untuk anak.' },
+  { title: 'Pirates and Emperors', author: 'Noam Chomsky', category: 'Sains', description: 'Analisis tajam sejarah politik internasional.' },
+  { title: 'Mengapa Kita Harus Shalat', author: 'Penerbit Anak', category: 'Agama', description: 'Edukasi agama menyenangkan untuk anak.' },
   { title: 'Donal AWD 2015', author: 'Disney', category: 'Komik', description: 'Petualangan lucu Donal Bebek dan keluarga.' },
-  { title: '14 Marketing Plan', author: 'Marketing Expert', category: 'Digital Marketing', description: 'Strategi pemasaran digital bisnis modern.' }
+  { title: '14 Marketing Plan', author: 'Marketing Expert', category: 'Lainnya', description: 'Strategi pemasaran digital bisnis modern.' }
 ];
 
-let sql = "-- SQL Seed for Perpus.org collection\n";
-sql += "INSERT INTO books (title, author, category, description, is_available) VALUES \n";
-sql += books.map(b => `('${b.title.replace(/'/g, "''")}', '${b.author.replace(/'/g, "''")}', '${b.category}', '${b.description.replace(/'/g, "''")}', true)`).join(",\n") + ";";
+let sql = "-- SQL Seed for Perpus.org collection (RELATIONAL VERSION)\n";
+sql += "-- Pastikan kategori yang digunakan sudah ada di tabel 'categories'\n\n";
+
+books.forEach(b => {
+  sql += `INSERT INTO books (title, author, category_id, description, is_available) \n`;
+  sql += `SELECT '${b.title.replace(/'/g, "''")}', '${b.author.replace(/'/g, "''")}', id, '${b.description.replace(/'/g, "''")}', true \n`;
+  sql += `FROM categories WHERE name = '${b.category}' LIMIT 1;\n\n`;
+});
 
 fs.writeFileSync('seed_perpus.sql', sql, 'utf8');
-console.log("File seed_perpus.sql berhasil dibuat (ES Module).");
+console.log("File seed_perpus.sql berhasil diperbarui dengan relasi category_id.");

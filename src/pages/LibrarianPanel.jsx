@@ -254,9 +254,14 @@ const ModalEditBuku = ({ book, onClose, onSave, categories = [] }) => {
 }
 
 // ── Modal Kelola Kategori ──
-const ModalKelolaKategori = ({ onClose, categories, refreshCategories }) => {
+const ModalKelolaKategori = ({ onClose, categories, refreshCategories, books = [] }) => {
   const [newCat, setNewCat] = useState('')
   const [saving, setSaving] = useState(false)
+
+  // Fungsi pembantu untuk hitung jumlah buku
+  const getBookCountForCategory = (catName) => {
+    return books.filter(b => b.category === catName).length
+  }
 
   const handleAdd = async () => {
     if (!newCat.trim()) return
@@ -298,9 +303,12 @@ const ModalKelolaKategori = ({ onClose, categories, refreshCategories }) => {
 
         <div className="space-y-2 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
           {categories.map(c => (
-            <div key={c.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl group">
-              <span className="text-sm font-bold text-slate-700">{c.name}</span>
-              <button onClick={() => handleDelete(c.id, c.name)} className="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-600 transition-all p-1">
+            <div key={c.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl group transition-all hover:bg-slate-100">
+              <div className="flex flex-col">
+                <span className="text-sm font-bold text-slate-700">{c.name}</span>
+                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{getBookCountForCategory(c.name)} Buku</span>
+              </div>
+              <button onClick={() => handleDelete(c.id, c.name)} className="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-600 transition-all p-2 bg-white rounded-xl shadow-sm">
                 <Trash2 size={16} />
               </button>
             </div>
@@ -724,7 +732,7 @@ const LibrarianPanel = ({ categories = [], schoolIdentity, setSchoolIdentity, bo
       <AnimatePresence>
         {showModalBuku && <ModalTambahBuku onClose={() => setShowModalBuku(false)} onSave={handleSaveBuku} categories={categories} />}
         {showModalAnggota && <ModalAnggota onClose={() => setShowModalAnggota(false)} />}
-        {showModalKategori && <ModalKelolaKategori onClose={() => setShowModalKategori(false)} categories={categories} refreshCategories={refreshCategories} />}
+        {showModalKategori && <ModalKelolaKategori onClose={() => setShowModalKategori(false)} categories={categories} refreshCategories={refreshCategories} books={books} />}
         {showModalEditBuku && editingBook && <ModalEditBuku book={editingBook} onClose={() => {setShowModalEditBuku(false); setEditingBook(null)}} onSave={handleSaveEditBuku} categories={categories} />}
       </AnimatePresence>
 

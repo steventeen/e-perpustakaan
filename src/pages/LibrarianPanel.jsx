@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Html5QrcodeScanner } from 'html5-qrcode'
 import { USERS_DATA, getBookCover } from '../dataStore'
 import { supabase } from '../lib/supabase'
+import { safeParseStorage, setStorage, removeStorage } from '../utils/storage'
 
 // ── Toast ─────────────────────────────────────────────────
 const Toast = ({ msg, type, onClose }) => (
@@ -332,7 +333,8 @@ const ModalAnggota = ({ onClose }) => {
       const { data: approvedRequests } = await supabase.from('user_requests').select('*').eq('status', 'approved')
       
       // 2. Gabungkan dengan USERS_DATA (Hardcoded) dan localStorage (Perubahan Lokal)
-      const localUsers = JSON.parse(localStorage.getItem('epus_users') || '[]')
+      const localUsers = safeParseStorage('epus_users', [])
+
       let merged = [...USERS_DATA]
 
       // Gabungkan profil dari database
@@ -401,7 +403,8 @@ const ModalAnggota = ({ onClose }) => {
     const updatedUsers = users.map(u => u.id === editingId ? { ...u, ...finalEdit } : u)
     setUsers(updatedUsers)
     // Simpan ke localStorage
-    localStorage.setItem('epus_users', JSON.stringify(updatedUsers))
+    setStorage('epus_users', updatedUsers)
+
     
     // Update profil di Supabase juga
     try {
@@ -434,9 +437,8 @@ const ModalAnggota = ({ onClose }) => {
     } catch(e) {}
     
     // 3. Simpan state sisa ke localStorage
-    const saved = JSON.parse(localStorage.getItem('epus_users') || '[]')
-    const updatedLocal = saved.filter(usr => usr.username !== u.username)
-    localStorage.setItem('epus_users', JSON.stringify(updatedLocal))
+    setStorage('epus_users', updatedLocal)
+
     
     alert(`🗑️ Anggota "${u.full_name || u.username}" telah dihapus.`)
   }
@@ -608,13 +610,14 @@ const LibrarianPanel = ({ categories = [], schoolIdentity, setSchoolIdentity, bo
   }, [schoolIdentity])
 
   const [smtpForm, setSmtpForm] = useState(() => {
-    const saved = localStorage.getItem('epus_smtp')
-    return saved ? JSON.parse(saved) : { host: 'smtp.gmail.com', port: '465', user: '', pass: '', sender: 'Notifikasi Perpustakaan' }
+    return safeParseStorage('epus_smtp', { host: 'smtp.gmail.com', port: '465', user: '', pass: '', sender: 'Notifikasi Perpustakaan' })
   })
+
 
   const [emailTemplate, setEmailTemplate] = useState(() => {
     return localStorage.getItem('epus_email_template') || 'Halo {{name}}, Buku "{{title}}" telah berhasil masuk ke daftar bacaan Anda. Selamat membaca!'
   })
+
 
   const showToast = (msg, type = 'success') => {
     setToast({ msg, type })
@@ -988,7 +991,7 @@ const LibrarianPanel = ({ categories = [], schoolIdentity, setSchoolIdentity, bo
                       { key: 'email_from_name', value: smtpForm.sender }
                     ], { onConflict: 'key' });
                     
-                    localStorage.setItem('epus_smtp', JSON.stringify(smtpForm));
+                    setStorage('epus_smtp', smtpForm);
                     showToast('✅ Konfigurasi SMTP berhasil disimpan ke sistem!');
                   } catch (e) {
                     localStorage.setItem('epus_smtp', JSON.stringify(smtpForm));
@@ -1023,12 +1026,13 @@ const LibrarianPanel = ({ categories = [], schoolIdentity, setSchoolIdentity, bo
                       { key: 'email_template', value: emailTemplate }
                     ], { onConflict: 'key' });
                     
-                    localStorage.setItem('epus_email_template', emailTemplate);
+                    setStorage('epus_email_template', emailTemplate);
                     showToast('✅ Template Email berhasil diperbarui di sistem!');
                   } catch (e) {
-                    localStorage.setItem('epus_email_template', emailTemplate);
+                    setStorage('epus_email_template', emailTemplate);
                     showToast('⚠️ Tersimpan di browser ini saja.', 'warning');
                   }
+
                 }}
                 className="w-full bg-purple-600 text-white font-black text-sm py-4 rounded-2xl hover:bg-purple-700 transition-colors active:scale-95 shadow-lg shadow-purple-100">
                 💾 Simpan Template Email

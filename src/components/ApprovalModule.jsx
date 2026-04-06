@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { CheckCircle, XCircle, Clock, BookOpen, Eye, ExternalLink, ChevronDown, RefreshCcw, Inbox, KeyRound, Bell } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { sendNotification } from '../utils/notifications'
+import { safeParseStorage, setStorage } from '../utils/storage'
 
 const STATUS_MAP = {
   pending:  { label: 'Menunggu', color: 'bg-amber-100 text-amber-700', icon: Clock },
@@ -43,8 +44,8 @@ const ApprovalModule = ({ user }) => {
 
   const loadAccessRequests = useCallback(async () => {
     setLoadingAccess(true)
-    // Baca dari localStorage (utama)
-    const local = JSON.parse(localStorage.getItem('epus_book_access_requests') || '[]')
+    const local = safeParseStorage('epus_book_access_requests', [])
+
     // Coba juga dari Supabase (jika tabel tersedia)
     try {
       const { data } = await supabase
@@ -73,13 +74,13 @@ const ApprovalModule = ({ user }) => {
     const durationLabel = durationDays === 0 ? 'Permanen' : `${durationDays} Hari`
 
     // Update status di localStorage
-    const requests = JSON.parse(localStorage.getItem('epus_book_access_requests') || '[]')
+    const requests = safeParseStorage('epus_book_access_requests', [])
     const updated = requests.map(r => r.id === req.id ? { ...r, status: action, reviewed_at: new Date().toISOString(), expiry_at: expiryDate } : r)
-    localStorage.setItem('epus_book_access_requests', JSON.stringify(updated))
+    setStorage('epus_book_access_requests', updated)
 
     if (action === 'approved') {
       // Simpan grant akses di localStorage dengan kadaluarsa
-      const grants = JSON.parse(localStorage.getItem('epus_book_access_grants') || '[]')
+      const grants = safeParseStorage('epus_book_access_grants', [])
       const idx = grants.findIndex(g => g.book_id === req.book_id && g.username === req.username)
       const grantData = {
         book_id: req.book_id,

@@ -16,6 +16,7 @@ import { GuidePage, ReportsPage } from './pages/StaticPages'
 import AIChat from './pages/AIChat'
 import { AnimatePresence, motion } from 'framer-motion'
 import { supabase } from './lib/supabase'
+import { safeParseStorage, setStorage, removeStorage } from './utils/storage'
 
 // ── Fullscreen helpers ───────────────────────────────────────
 const enterFullscreen = () => {
@@ -37,40 +38,22 @@ function App() {
   // ── Debug Logger ─────────────────────────────────────
   useEffect(() => { console.log("🚀 App Root Mounted. User:", user); }, []);
 
-  // ── Auth State ──────────────────────────────────────────
-  const [user, setUser] = useState(() => {
-    try {
-      const saved = localStorage.getItem('epus_session_user')
-      if (saved && saved !== 'undefined') return JSON.parse(saved)
-    } catch (e) { 
-      console.error('Session Parse Error:', e)
-      localStorage.removeItem('epus_session_user')
-    }
-    return null
-  })
+  const [user, setUser] = useState(() => safeParseStorage('epus_session_user'))
+
 
   // ── App State ───────────────────────────────────────────
   const [activeTab, setActiveTab] = useState('home')
   const [category, setCategory] = useState('Semua')
   const [role, setRole] = useState(() => {
-    try {
-      const saved = localStorage.getItem('epus_session_user')
-      if (saved && saved !== 'undefined') return JSON.parse(saved).role
-    } catch (e) {}
-    return 'student'
+    const u = safeParseStorage('epus_session_user')
+    return u?.role || 'student'
   })
 
-  const [schoolIdentity, setSchoolIdentity] = useState(() => {
-    try {
-      const saved = localStorage.getItem('epus_school_identity')
-      if (saved && saved !== 'undefined') return JSON.parse(saved)
-    } catch (e) {}
-    return {
-      name: 'SMP NEGERI 2 AMURANG TIMUR (SATAP)',
-      department: 'Kementerian Pendidikan Dasar',
-      logo: 'https://upload.wikimedia.org/wikipedia/commons/9/9d/Logo_Tut_Wuri_Handayani.png'
-    }
-  })
+  const [schoolIdentity, setSchoolIdentity] = useState(() => safeParseStorage('epus_school_identity', {
+    name: 'SMP NEGERI 2 AMURANG TIMUR (SATAP)',
+    department: 'Kementerian Pendidikan Dasar',
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/9/9d/Logo_Tut_Wuri_Handayani.png'
+  }))
 
   // ── FULLSCREEN on Mount & Interaction ──────────────────
   useEffect(() => {
@@ -121,17 +104,17 @@ function App() {
 
   useEffect(() => {
     if (user) {
-      localStorage.setItem('epus_session_user', JSON.stringify(user))
+      setStorage('epus_session_user', user)
       setRole(user.role)
     } else {
-      localStorage.removeItem('epus_session_user')
+      removeStorage('epus_session_user')
     }
   }, [user])
 
   const [readingBook, setReadingBook] = useState(null)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   useEffect(() => {
-    localStorage.setItem('epus_school_identity', JSON.stringify(schoolIdentity))
+    setStorage('epus_school_identity', schoolIdentity)
   }, [schoolIdentity])
 
   const [books, setBooks] = useState([])
@@ -159,28 +142,29 @@ function App() {
           
           // Persist SMTP & Template to localStorage for components that need them
           if (s.key === 'email_host') {
-            const current = JSON.parse(localStorage.getItem('epus_smtp') || '{}')
-            localStorage.setItem('epus_smtp', JSON.stringify({ ...current, host: s.value }))
+            const current = safeParseStorage('epus_smtp', {})
+            setStorage('epus_smtp', { ...current, host: s.value })
           }
           if (s.key === 'email_port') {
-            const current = JSON.parse(localStorage.getItem('epus_smtp') || '{}')
-            localStorage.setItem('epus_smtp', JSON.stringify({ ...current, port: s.value }))
+            const current = safeParseStorage('epus_smtp', {})
+            setStorage('epus_smtp', { ...current, port: s.value })
           }
           if (s.key === 'email_user') {
-            const current = JSON.parse(localStorage.getItem('epus_smtp') || '{}')
-            localStorage.setItem('epus_smtp', JSON.stringify({ ...current, user: s.value }))
+            const current = safeParseStorage('epus_smtp', {})
+            setStorage('epus_smtp', { ...current, user: s.value })
           }
           if (s.key === 'email_password') {
-            const current = JSON.parse(localStorage.getItem('epus_smtp') || '{}')
-            localStorage.setItem('epus_smtp', JSON.stringify({ ...current, pass: s.value }))
+            const current = safeParseStorage('epus_smtp', {})
+            setStorage('epus_smtp', { ...current, pass: s.value })
           }
           if (s.key === 'email_from_name') {
-            const current = JSON.parse(localStorage.getItem('epus_smtp') || '{}')
-            localStorage.setItem('epus_smtp', JSON.stringify({ ...current, sender: s.value }))
+            const current = safeParseStorage('epus_smtp', {})
+            setStorage('epus_smtp', { ...current, sender: s.value })
           }
           if (s.key === 'email_template') {
-            localStorage.setItem('epus_email_template', s.value)
+            setStorage('epus_email_template', s.value)
           }
+
         })
         setSchoolIdentity(identity)
       }
@@ -223,9 +207,10 @@ function App() {
     // 1. Simpan salinan sementara atau tutup modal dulu agar tidak crash
     setShowLogoutConfirm(false)
     
-    // 2. Bersihkan sesi dari localStorage secara paksa
-    localStorage.removeItem('epus_session_user')
-    localStorage.removeItem('epus_session')
+    // 2. Bersihkan sesi secara paksa
+    removeStorage('epus_session_user')
+    removeStorage('epus_session')
+
     
     // 3. Reset state aplikasi
     setUser(null)
@@ -237,20 +222,22 @@ function App() {
   const openReader = async (book) => {
     if (book.requires_approval && role !== 'librarian') {
       // Cek apakah user sudah punya akses yang disetujui
-      const granted = JSON.parse(localStorage.getItem('epus_book_access_grants') || '[]')
+      const granted = safeParseStorage('epus_book_access_grants', [])
       const hasAccess = granted.find(g => {
         if (g.book_id !== book.id || g.username !== user?.username || g.status !== 'approved') return false
         // Cek kadaluarsa
         if (g.expiry_at && new Date(g.expiry_at) < new Date()) return false // sudah kadaluarsa
         return true
       })
+
       if (hasAccess) {
         setReadingBook(book)
         return
       }
       // Cek apakah sudah ada permintaan pending
-      const requests = JSON.parse(localStorage.getItem('epus_book_access_requests') || '[]')
+      const requests = safeParseStorage('epus_book_access_requests', [])
       const existing = requests.find(r => r.book_id === book.id && r.username === user?.username)
+
       if (existing && existing.status === 'pending') {
         alert('⏳ Permintaan akses Anda untuk buku ini sedang diproses. Silakan tunggu konfirmasi dari Pustakawan.')
         return
@@ -269,8 +256,9 @@ function App() {
         }
         // Sudah lewat 24 jam → hapus entri lama agar bisa request baru
         const freshRequests = requests.filter(r => !(r.book_id === book.id && r.username === user?.username))
-        localStorage.setItem('epus_book_access_requests', JSON.stringify(freshRequests))
+        setStorage('epus_book_access_requests', freshRequests)
       }
+
       const ask = window.confirm(`🔒 Akses Terbatas!\nBuku "${book.title}" memerlukan persetujuan Kepala Perpustakaan.\n\nApakah Anda ingin mengirimkan permintaan akses membaca?`)
       if (ask) {
         const newRequest = {
@@ -285,7 +273,8 @@ function App() {
         }
         // Simpan ke localStorage
         requests.push(newRequest)
-        localStorage.setItem('epus_book_access_requests', JSON.stringify(requests))
+        setStorage('epus_book_access_requests', requests)
+
         // Kirim notifikasi ke admin
         sendNotification('admin', '🔑 Permintaan Akses Buku', `${newRequest.full_name} meminta akses membaca: "${book.title}"`, 'approval', 'approval')
         // Coba simpan ke Supabase

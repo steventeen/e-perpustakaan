@@ -4,6 +4,7 @@ import { BookOpen, Eye, EyeOff, User, Lock, ChevronRight, Mail, Phone, Users, Cl
 import { USERS_DATA } from '../dataStore'
 import { supabase } from '../lib/supabase'
 import { logActivity } from '../utils/logger'
+import { safeParseStorage, setStorage } from '../utils/storage'
 
 const DEMO_ACCOUNTS = [
   { username: 'admin',              password: 'admin123',  role: 'librarian',   display: 'Pustakawan Admin' },
@@ -34,8 +35,9 @@ const RegisterForm = ({ onBack, schoolIdentity }) => {
 
     setLoading(true)
 
-    const savedUsers = JSON.parse(localStorage.getItem('epus_users') || '[]')
-    const pendingUsers = JSON.parse(localStorage.getItem('epus_pending_users') || '[]')
+    const savedUsers = safeParseStorage('epus_users', [])
+    const pendingUsers = safeParseStorage('epus_pending_users', [])
+
     const allAccounts = [...DEMO_ACCOUNTS, ...savedUsers, ...pendingUsers]
     
     // ── 1. CEK LOKAL ──
@@ -75,7 +77,8 @@ const RegisterForm = ({ onBack, schoolIdentity }) => {
 
     // Simpan ke antrian lokal
     pendingUsers.push(request)
-    localStorage.setItem('epus_pending_users', JSON.stringify(pendingUsers))
+    setStorage('epus_pending_users', pendingUsers)
+
 
     // Kirim ke Supabase user_requests (jika tabel tersedia)
     try {
@@ -191,13 +194,12 @@ const RegisterForm = ({ onBack, schoolIdentity }) => {
 
 // ── Main Login ───────────────────────────────────────────────────────
 const Login = ({ onLogin, schoolIdentity }) => {
-  const [isRegister, setIsRegister] = useState(false)
+  const [mode, setMode] = useState('login')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
-
-  if (isRegister) return <RegisterForm onBack={() => setIsRegister(false)} schoolIdentity={schoolIdentity} />
+  const [showPass, setShowPass] = useState(false)
 
   const handleLogin = async (e) => {
     e.preventDefault()
@@ -255,7 +257,7 @@ const Login = ({ onLogin, schoolIdentity }) => {
     } catch (e) { console.warn('Sync DB Check Failed:', e) }
 
     // ── 2. CEK LOCAL FALLBACK & DEMO ACCOUNTS ──
-    const pendingUsers = JSON.parse(localStorage.getItem('epus_pending_users') || '[]')
+    const pendingUsers = safeParseStorage('epus_pending_users', [])
     const isPending = pendingUsers.find(u =>
       u.username.toLowerCase() === username.trim().toLowerCase() && 
       u.password === password &&

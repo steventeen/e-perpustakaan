@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase';
+import { safeParseStorage, setStorage } from './storage';
 
 /**
  * Log user activity to Supabase and LocalStorage
@@ -13,7 +14,8 @@ export const logActivity = async (user_id, username, action_type, description) =
 
     // 2. Persist to LocalStorage (Fallback / Immediate View)
     try {
-        const localLogs = JSON.parse(localStorage.getItem('epus_activity_logs') || '[]');
+        const localLogs = safeParseStorage('epus_activity_logs', [])
+
         const newLog = {
             id: Date.now(),
             user_id,
@@ -23,7 +25,8 @@ export const logActivity = async (user_id, username, action_type, description) =
             created_at: new Date().toISOString()
         };
         localLogs.unshift(newLog);
-        localStorage.setItem('epus_activity_logs', JSON.stringify(localLogs.slice(0, 100))); // keep last 100
+        setStorage('epus_activity_logs', localLogs.slice(0, 100)) // keep last 100
+
     } catch (e) {
         console.error('Local log failed:', e);
     }

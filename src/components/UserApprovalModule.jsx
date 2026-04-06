@@ -6,6 +6,7 @@ import {
 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { sendNotification } from '../utils/notifications'
+import { safeParseStorage, setStorage } from '../utils/storage'
 
 // ── EmailJS kirim email (client-side, tanpa backend) ────────────────
 // Gunakan layanan EmailJS.com — daftar gratis, pasang Service ID & Template ID
@@ -88,7 +89,8 @@ const UserApprovalModule = ({ adminUser }) => {
       }
     } catch {
       // Fallback to localStorage pending users
-      const pending = JSON.parse(localStorage.getItem('epus_pending_users') || '[]')
+      const pending = safeParseStorage('epus_pending_users', [])
+
       const filtered = filter === 'all' ? pending : pending.filter(p => (p.status || 'pending') === filter)
       setRequests(filtered.reverse())
     }
@@ -112,15 +114,15 @@ const UserApprovalModule = ({ adminUser }) => {
     } catch (_) {}
 
     // 2. Update localStorage pending
-    const pendingUsers = JSON.parse(localStorage.getItem('epus_pending_users') || '[]')
+    const pendingUsers = safeParseStorage('epus_pending_users', [])
     const updatedPending = pendingUsers.map(u =>
       u.username === req.username ? { ...u, status: action } : u
     )
-    localStorage.setItem('epus_pending_users', JSON.stringify(updatedPending))
+    setStorage('epus_pending_users', updatedPending)
 
     if (isApproved) {
       // 3. Tambahkan ke akun aktif
-      const savedUsers = JSON.parse(localStorage.getItem('epus_users') || '[]')
+      const savedUsers = safeParseStorage('epus_users', [])
       savedUsers.push({
         username: req.username,
         password: req.password || req.password_hash,

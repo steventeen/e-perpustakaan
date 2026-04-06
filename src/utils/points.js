@@ -12,6 +12,8 @@
  *   - Meminjam buku fisik: +20 pts
  */
 
+import { safeParseStorage, setStorage } from './storage'
+
 const POINTS_KEY = 'epus_literacy_points'
 
 // ── Definisi level ───────────────────────────────────────
@@ -37,15 +39,16 @@ export const POINT_VALUES = {
 /** Ambil data poin user dari localStorage */
 export const getPointsData = (username) => {
   if (!username) return { total: 0, history: [], dailyLogin: null }
-  const all = JSON.parse(localStorage.getItem(POINTS_KEY) || '{}')
+  const all = safeParseStorage(POINTS_KEY, {})
+
   return all[username] || { total: 0, history: [], dailyLogin: null }
 }
 
 /** Simpan data poin user ke localStorage */
 const savePointsData = (username, data) => {
-  const all = JSON.parse(localStorage.getItem(POINTS_KEY) || '{}')
+  const all = safeParseStorage(POINTS_KEY, {})
   all[username] = data
-  localStorage.setItem(POINTS_KEY, JSON.stringify(all))
+  setStorage(POINTS_KEY, all)
 }
 
 /** Tambahkan poin */
@@ -97,7 +100,8 @@ export const getLevel = (totalPoints) => {
 
 /** Ambil leaderboard dari semua user yang pernah login */
 export const getLeaderboard = () => {
-  const all = JSON.parse(localStorage.getItem(POINTS_KEY) || '{}')
+  const all = safeParseStorage(POINTS_KEY, {})
+
   return Object.entries(all)
     .map(([username, data]) => ({
       username,

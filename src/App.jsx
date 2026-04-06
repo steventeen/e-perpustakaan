@@ -187,16 +187,37 @@ function App() {
 
   const fetchBooks = async () => {
     setIsLoadingBooks(true)
-    // Supabase default is 1000, we override with range to see all 2000+ books
-    const { data, error } = await supabase
-      .from('books')
-      .select(`*, categories (name)`)
-      .range(0, 5000) // Increase limit to see the whole 2000+ catalog
-      .order('id', { ascending: false });
-      
-    if (!error) {
-      setBooks(data.map(b => ({ ...b, category: b.categories?.name || 'Lainnya' })))
+    let allBooks = []
+    let from = 0
+    const step = 1000
+    let hasMore = true
+
+    // Loop penarikan data untuk menembus limit 1000 Supabase
+    while (hasMore) {
+      console.log(`Fetching books from ${from} to ${from + step - 1}...`);
+      const { data, error } = await supabase
+        .from('books')
+        .select(`*, categories (name)`)
+        .range(from, from + step - 1)
+        .order('id', { ascending: false });
+
+      if (error) {
+        console.error('Fetch error:', error);
+        hasMore = false;
+      } else if (!data || data.length === 0) {
+        hasMore = false;
+      } else {
+        allBooks = [...allBooks, ...data];
+        console.log(`Current books count: ${allBooks.length}`);
+        if (data.length < step) {
+          hasMore = false; // Sudah habis
+        } else {
+          from += step;
+        }
+      }
     }
+
+    setBooks(allBooks.map(b => ({ ...b, category: b.categories?.name || 'Lainnya' })))
     setIsLoadingBooks(false)
   }
 

@@ -317,25 +317,49 @@ const ModalKelolaKategori = ({ onClose, categories, refreshCategories }) => {
 
 // ── Modal Kelola Anggota (+ Edit User & Role) ──────────────
 const ModalAnggota = ({ onClose }) => {
-  // Load users from localStorage or fallback to USERS_DATA
-  const [users, setUsers] = useState(() => {
-    const saved = localStorage.getItem('epus_users')
-    if (saved) {
-      const parsed = JSON.parse(saved)
-      // Merge dengan USERS_DATA (agar data baru dari USERS_DATA tetap ada)
-      const merged = [...USERS_DATA]
-      parsed.forEach(p => {
-        const idx = merged.findIndex(u => u.id === p.id)
-        if (idx > -1) merged[idx] = { ...merged[idx], ...p }
-      })
-      return merged
-    }
-    return [...USERS_DATA]
-  })
+  const [users, setUsers] = useState([])
+  const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [filterG, setFilterG] = useState('all')
   const [editingId, setEditingId] = useState(null)
   const [editForm, setEditForm] = useState({})
+
+  const loadAllUsers = async () => {
+    setLoading(true)
+    try {
+      // 1. Ambil data dari Supabase (Pusat)
+      const { data: dbProfiles } = await supabase.from('profiles').select('*')
+      
+      // 2. Gabungkan dengan USERS_DATA (Hardcoded) dan localStorage (Perubahan Lokal)
+      const localUsers = JSON.parse(localStorage.getItem('epus_users') || '[]')
+      let merged = [...USERS_DATA]
+
+      // Gabungkan profil dari database
+      if (dbProfiles) {
+        dbProfiles.forEach(p => {
+          const idx = merged.findIndex(u => u.username === p.username)
+          if (idx > -1) merged[idx] = { ...merged[idx], ...p, id: p.id || merged[idx].id }
+          else merged.push({ ...p, id: p.id || Date.now() + Math.random() })
+        })
+      }
+
+      // Gabungkan perubahan dari localStorage (prioritas terakhir jika ada edit lokal)
+      localUsers.forEach(p => {
+        const idx = merged.findIndex(u => u.username === p.username)
+        if (idx > -1) merged[idx] = { ...merged[idx], ...p }
+      })
+
+      setUsers(merged)
+    } catch (e) {
+      console.error(e)
+      setUsers([...USERS_DATA])
+    }
+    setLoading(false)
+  }
+
+  useEffect(() => {
+    loadAllUsers()
+  }, [])
 
   const filtered = users.filter(u => {
     const matchSearch = u.full_name.toLowerCase().includes(search.toLowerCase()) ||
@@ -413,8 +437,14 @@ const ModalAnggota = ({ onClose }) => {
 
         {/* User list */}
         <div className="overflow-y-auto space-y-2 flex-1">
-          {filtered.map(u => (
-            <div key={u.id}>
+          {loading ? (
+             <div className="text-center py-12">
+               <RefreshCcw size={24} className="animate-spin text-primary-500 mx-auto mb-2" />
+               <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Memuat anggota...</p>
+             </div>
+          ) : (
+            filtered.map(u => (
+            <div key={u.id || u.username}>
               {editingId === u.id ? (
                 // ── EDIT FORM ────────────────────────────
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
@@ -494,7 +524,7 @@ const ModalAnggota = ({ onClose }) => {
               )}
             </div>
           ))}
-          {filtered.length === 0 && (
+          {filtered.length === 0 && !loading && (
             <p className="text-center text-slate-400 py-8 font-medium text-sm">Tidak ada anggota ditemukan.</p>
           )}
         </div>

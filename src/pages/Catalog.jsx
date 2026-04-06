@@ -42,8 +42,9 @@ const Catalog = ({ books = [], categories = [], onOpenReader, autoFocus }) => {
           <div>
             <h1 className="text-2xl font-black text-slate-800 tracking-tight">E-Katalog</h1>
             <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mt-0.5">
-              {filteredBooks.length} dari {BOOKS_DATA.length} koleksi
+              {filteredBooks.length} dari {books.length > 0 ? books.length : BOOKS_DATA.length} koleksi
             </p>
+
           </div>
           {/* ✅ FILTER BUTTON — FUNGSIONAL */}
           <button

@@ -70,8 +70,10 @@ while ((match = urlRegex.exec(content)) !== null) {
     const category = categoryMap[catSlug];
     categoriesFound.add(category);
     
-    // POLA GAMBAR DITEMUKAN: https://image-v2.free-ebook.my.id/sketch/[SLUG]/[SLUG]-min.jpg
-    const cover_url = `https://image-v2.free-ebook.my.id/sketch/${bookSlug}/${bookSlug}-min.jpg`;
+    // POLA GAMBAR BARU + PROXY UNTUK PELEPASAN BLOKIR REFERER
+    // Menggunakan weserv.nl untuk bypass hotlinking protection
+    const directImgUrl = `image-v2.free-ebook.my.id/sketch/${bookSlug}/${bookSlug}-0.jpg`;
+    const cover_url = `https://images.weserv.nl/?url=${directImgUrl}&w=400&h=600&fit=cover`;
     
     books.push({
       title,
@@ -94,8 +96,8 @@ manualCategories.forEach(c => categoriesFound.add(c));
 
 console.log(`Berhasil mengekstrak ${books.length} buku unik.`);
 
-let sql = "-- SQL SEED RAKSASA DENGAN SAMPUL (2.000+ BOOKS)\n";
-sql += "-- Generated based on perpus.org sitemap\n\n";
+let sql = "-- SQL SEED RAKSASA DENGAN PROXY SAMPUL (2.000+ BOOKS)\n";
+sql += "-- Bypassing hotlinking using weserv.nl proxy\n\n";
 
 sql += "-- 1. DAFTARKAN KATEGORI\n";
 Array.from(categoriesFound).forEach(cat => {
@@ -114,5 +116,5 @@ finalBooks.forEach((b, index) => {
 });
 
 fs.writeFileSync('seed_perpus_2000.sql', sql, 'utf8');
-console.log("\nSUKSES! Berkas seed_perpus_2000.sql (dengan cover) telah dibuat.");
-console.log(`Total yang dimasukkan: ${finalBooks.length} buku.`);
+console.log("\nSUKSES! Berkas seed_perpus_2000.sql (DENGAN PROXY COVER) telah dibuat.");
+console.log(`Pola baru: https://images.weserv.nl/?url=image-v2.free-ebook.my.id/sketch/[SLUG]/[SLUG]-0.jpg`);

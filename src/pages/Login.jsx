@@ -201,7 +201,9 @@ const Login = ({ onLogin, schoolIdentity }) => {
     // Cek dulu apakah ada di pending (belum disetujui)
     const pendingUsers = JSON.parse(localStorage.getItem('epus_pending_users') || '[]')
     const isPending = pendingUsers.find(u =>
-      u.username.toLowerCase() === username.trim().toLowerCase() && u.password === password
+      u.username.toLowerCase() === username.trim().toLowerCase() && 
+      u.password === password &&
+      (u.status === 'pending' || !u.status)
     )
     if (isPending) {
       setError('Akun Anda sedang menunggu persetujuan Pustakawan. Cek email Anda setelah disetujui.')

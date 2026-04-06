@@ -74,7 +74,7 @@ const Sidebar = ({ activeTab, setActiveTab, role, user, onLogout, notificationBe
             <SidebarItem id="admin"       icon={LayoutGrid}  label="Admin Panel"    activeTab={activeTab} setActiveTab={setActiveTab} />
             <SidebarItem id="reports"     icon={BarChart3}   label="Laporan"        activeTab={activeTab} setActiveTab={setActiveTab} />
             <div className="relative">
-              <SidebarItem id="approval" icon={Inbox} label="Persetujuan Cerpen" activeTab={activeTab} setActiveTab={setActiveTab} />
+              <SidebarItem id="approval" icon={Inbox} label="Persetujuan Akses" activeTab={activeTab} setActiveTab={setActiveTab} />
               {activeTab !== 'approval' && (
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[8px] font-black bg-amber-500 text-white px-2 py-0.5 rounded-full uppercase tracking-wider">Review</span>
               )}

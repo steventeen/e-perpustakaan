@@ -204,7 +204,7 @@ const ApprovalModule = ({ user }) => {
 
       {/* Tab Switch */}
       <div className="flex bg-slate-100 rounded-2xl p-1">
-        {[['content', <><BookOpen size={13} /> Konten Buku/Cerpen</>, 'Konten'], ['access', <><KeyRound size={13} /> Permintaan Akses Buku</>, 'Akses']].map(([tab, icon, label]) => (
+        {[['content', <><BookOpen size={13} /> Konten Buku/PDF</>, 'Konten'], ['access', <><KeyRound size={13} /> Permintaan Akses Buku</>, 'Akses']].map(([tab, icon, label]) => (
           <button key={tab} onClick={() => setActiveTab(tab)}
             className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${activeTab === tab ? 'bg-white text-primary-700 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>
             {icon}
@@ -213,7 +213,7 @@ const ApprovalModule = ({ user }) => {
       </div>
 
 
-      {/* ── TAB: KONTEN BUKU/CERPEN ── */}
+      {/* ── TAB: KONTEN BUKU/PDF ── */}
       {activeTab === 'content' && (<>
       {/* Filter Tabs */}
       <div className="flex gap-2 flex-wrap">

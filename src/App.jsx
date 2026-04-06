@@ -80,6 +80,22 @@ function App() {
   }, [])
 
   // ── SYNC SESSION ──
+  // ── BRANDING & FAVICON SYNC ──
+  useEffect(() => {
+    if (schoolIdentity.name) {
+      document.title = `e-Perpus Digital (${schoolIdentity.name})`
+    } else {
+      document.title = 'e-Perpus Digital'
+    }
+
+    if (schoolIdentity.logo) {
+      const link = document.querySelector("link[rel~='icon']") || document.createElement('link')
+      link.rel = 'icon'
+      link.href = schoolIdentity.logo
+      document.getElementsByTagName('head')[0].appendChild(link)
+    }
+  }, [schoolIdentity])
+
   useEffect(() => {
     if (user) {
       localStorage.setItem('epus_session_user', JSON.stringify(user))
@@ -297,6 +313,7 @@ function App() {
         role={role}
         user={user}
         onLogout={handleLogout}
+        schoolIdentity={schoolIdentity}
         notificationBell={<NotificationBell user={user} onNavigate={handleNavFromNotif} />}
       />
 

@@ -191,12 +191,13 @@ const RegisterForm = ({ onBack, schoolIdentity }) => {
 
 // ── Main Login ───────────────────────────────────────────────────────
 const Login = ({ onLogin, schoolIdentity }) => {
+  const [isRegister, setIsRegister] = useState(false)
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
-  const [showPass, setShowPass] = useState(false)
-  const [error, setError]       = useState('')
-  const [loading, setLoading]   = useState(false)
-  const [mode, setMode]         = useState('login') // 'login' | 'register'
+
+  if (isRegister) return <RegisterForm onBack={() => setIsRegister(false)} schoolIdentity={schoolIdentity} />
 
   const handleLogin = async (e) => {
     e.preventDefault()
@@ -329,17 +330,18 @@ const Login = ({ onLogin, schoolIdentity }) => {
         transition={{ type: 'spring', damping: 25, stiffness: 200 }}
         className="w-full max-w-sm relative z-10">
 
-        {/* Branding */}
         <div className="text-center mb-8">
           <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}
             transition={{ delay: 0.2, type: 'spring', stiffness: 300 }}
-            className="w-20 h-20 bg-gradient-to-br from-primary-500 to-indigo-600 rounded-[2rem] flex items-center justify-center mx-auto mb-5 shadow-2xl shadow-primary-900/50 overflow-hidden">
-            {schoolIdentity?.logo?.includes('http')
+            className="w-24 h-24 bg-gradient-to-br from-primary-500 to-indigo-600 rounded-[2rem] flex items-center justify-center mx-auto mb-6 shadow-2xl shadow-primary-900/50 overflow-hidden border-2 border-white/10">
+            {schoolIdentity?.logo 
               ? <img src={schoolIdentity.logo} alt="Logo" className="w-full h-full object-cover" />
-              : <BookOpen size={36} className="text-white" />}
+              : <BookOpen size={40} className="text-white" />}
           </motion.div>
-          <h1 className="text-3xl font-black text-white tracking-tighter">e-Perpus Digital</h1>
-          <p className="text-primary-300 text-sm font-bold mt-2 uppercase tracking-wide">{schoolIdentity?.name || 'Sistem Perpustakaan Digital'}</p>
+          <h1 className="text-3xl font-black text-white tracking-tighter leading-none">e-Perpus Digital</h1>
+          <p className="text-primary-400 text-sm font-black mt-2 uppercase tracking-[0.2em]">
+            {schoolIdentity?.name || 'Sekolah Anda'}
+          </p>
         </div>
 
         {/* Card */}

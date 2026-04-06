@@ -23,14 +23,25 @@ const ROLE_BADGE = {
   teacher:   { label: 'Guru',       cls: 'bg-amber-100 text-amber-700' },
 }
 
-const Sidebar = ({ activeTab, setActiveTab, role, user, onLogout, notificationBell }) => {
+const Sidebar = ({ activeTab, setActiveTab, role, user, onLogout, notificationBell, schoolIdentity }) => {
   const badge = ROLE_BADGE[role] || ROLE_BADGE.student
   return (
     <aside className="hidden md:flex flex-col w-72 bg-white border-r border-slate-100 h-screen sticky top-0 p-6 overflow-y-auto shadow-sm">
       {/* Branding */}
-      <div className="flex items-center space-x-3 mb-5 px-2 text-primary-600 font-black text-xl italic uppercase tracking-tighter">
-        <div className="w-10 h-10 bg-primary-600 text-white rounded-xl flex items-center justify-center not-italic shadow-lg shadow-primary-100">📖</div>
-        <span>e-Perpus</span>
+      <div className="flex items-center space-x-3 mb-6 px-2">
+        <div className="w-12 h-12 bg-primary-600 text-white rounded-2xl flex items-center justify-center shadow-xl shadow-primary-100 overflow-hidden shrink-0 border border-primary-50">
+          {schoolIdentity?.logo ? (
+            <img src={schoolIdentity.logo} alt="Logo" className="w-full h-full object-cover" />
+          ) : (
+            <span className="text-xl not-italic">📖</span>
+          )}
+        </div>
+        <div className="min-w-0">
+          <h1 className="text-lg font-black text-primary-600 italic uppercase tracking-tighter leading-none">e-Perpus</h1>
+          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-0.5 truncate leading-tight">
+            {schoolIdentity?.name || 'Digital Library'}
+          </p>
+        </div>
       </div>
 
       {/* User Info Card */}
